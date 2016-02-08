@@ -1,0 +1,6 @@
+docs/_build/*
+build/*
+lightstep.egg-info/*
+dist/*
+.tox/*
+**.pyc
