@@ -7,10 +7,10 @@ from thrift.protocol import TBinaryProtocol
 from .crouton import ReportingService
 
 class _Connection(object):
-    """ Instances of _Connection are used to establish a connection to
-        the server via HTTP protocol.
+    """Instances of _Connection are used to establish a connection to the
+    server via HTTP protocol.
 
-        This class is NOT THREADSAFE.
+    This class is NOT THREADSAFE and access must by synchronized externally.
     """
     def __init__(self, service_url):
         self._service_url = service_url
@@ -20,9 +20,10 @@ class _Connection(object):
         self._report_exceptions_count = 0
 
     def open(self):
-        """ Establish HTTP connection to the server.
-            Note: THttpClient also supports https and will use http/https
-                according to the scheme in the URL it is given.
+        """Establish HTTP connection to the server.
+
+        Note: THttpClient also supports https and will use http/https according
+        to the scheme in the URL it is given.
         """
         try:
             self._transport = THttpClient.THttpClient(self._service_url)
@@ -36,15 +37,14 @@ class _Connection(object):
 
 
     def report(self, *args, **kwargs):
-        """ Report to the server."""
-        # Notice the annoying case change on the method name.
-        # I chose to stay consistent with casing in this class
-        # vs staying consistent with the casing of the pass-through method.
+        """Report to the server."""
+        # Notice the annoying case change on the method name. I chose to stay
+        # consistent with casing in this class vs staying consistent with the
+        # casing of the pass-through method.
         return self._client.Report(*args, **kwargs)
 
     def close(self):
-        """ Close HTTP connection to the server.
-        """
+        """Close HTTP connection to the server."""
         if self._transport is None:
             return
         if self._client is None:

@@ -17,26 +17,27 @@ from .crouton import ttypes
 from . import constants, version as cruntime_version, util, connection as conn
 
 class Runtime(object):
-    """ Instances of Runtime are used to sends logs and spans to the server.
+    """Instances of Runtime are used to sends logs and spans to the server.
 
-        :param str group_name: name identifying the type of service that
-            is being tracked
-        :param str access_token: project's access token
-        :param bool secure: whether HTTP connection is secure
-        :param str service_host: Service host name
-        :param int service_port: Service port number
-        :param int max_log_records: Maximum number of log records to buffer
-        :param int max_span_records: Maximum number of spans records to buffer
-        :param bool certificate_verification: if False, will ignore SSL
-            certification verification (in ALL HTTPS calls, not just in this library)
-            for the lifetime of this process; intended for debugging purposes only
+    :param str group_name: name identifying the type of service that is being
+        tracked
+    :param str access_token: project's access token
+    :param bool secure: whether HTTP connection is secure
+    :param str service_host: Service host name
+    :param int service_port: Service port number
+    :param int max_log_records: Maximum number of log records to buffer
+    :param int max_span_records: Maximum number of spans records to buffer
+    :param bool certificate_verification: if False, will ignore SSL
+        certification verification (in ALL HTTPS calls, not just in this
+        library) for the lifetime of this process; intended for debugging
+        purposes only
     """
     def __init__(self,
                  group_name='',
                  access_token='',
                  secure=True,
-                 service_host="api.traceguide.io",
-                 service_port=9997,
+                 service_host="collector.lightstep.com",
+                 service_port=443,
                  max_log_records=constants.DEFAULT_MAX_LOG_RECORDS,
                  max_span_records=constants.DEFAULT_MAX_SPAN_RECORDS,
                  certificate_verification=True,
@@ -75,8 +76,8 @@ class Runtime(object):
         self._periodic_flush_seconds = periodic_flush_seconds
         if self._periodic_flush_seconds <= 0:
             warnings.warn(
-                ('Runtime(periodic_flush_seconds={0}) means we will never flush '
-                 'to lightstep unless explicitly requested.'.format(self._periodic_flush_seconds)))
+                'Runtime(periodic_flush_seconds={0}) means we will never flush to lightstep unless explicitly requested.'.format(
+                    self._periodic_flush_seconds))
             self._periodic_flush_connection = None
         else:
             self._periodic_flush_connection = conn._Connection(self._service_url)
@@ -87,13 +88,12 @@ class Runtime(object):
             self._flush_thread.start()
 
     def shutdown(self, flush=True):
-        """ Shutdown the Runtime's connection by (optionally) flushing the remaining
-            logs and spans and then disabling the Runtime.
+        """Shutdown the Runtime's connection by (optionally) flushing the
+        remaining logs and spans and then disabling the Runtime.
 
-            Note: spans and logs will no longer be reported after shutdown
-            is called.
+        Note: spans and logs will no longer be reported after shutdown is called.
 
-            Returns whether the data was successfully flushed.
+        Returns whether the data was successfully flushed.
         """
         # Closing connection twice results in an error. Exit early
         # if runtime has already been disabled.
@@ -110,14 +110,15 @@ class Runtime(object):
         return flushed
 
     def flush(self, connection=None):
-        """ Immediately send unreported data to the server.
+        """Immediately send unreported data to the server.
 
-            Calling flush() will ensure that any current unreported data
-            will be immediately sent to the host server.
+        Calling flush() will ensure that any current unreported data will be
+        immediately sent to the host server.
 
-            If connection is not specified, the report will sent to the server passed in to __init__.
+        If connection is not specified, the report will sent to the server
+        passed in to __init__.
 
-            Returns whether the data was successfully flushed.
+        Returns whether the data was successfully flushed.
         """
         if self._disabled_runtime:
             return False
@@ -128,15 +129,15 @@ class Runtime(object):
         return self._flush_with_new_connection()
 
     def _flush_with_new_connection(self):
-        """ Flush, starting a new connection first."""
+        """Flush, starting a new connection first."""
         with contextlib.closing(conn._Connection(self._service_url)) as connection:
             connection.open()
             return self._flush_worker(connection)
 
     def _flush_periodically(self):
-        """ Periodically send reports to the server.
+        """Periodically send reports to the server.
 
-            Runs in a dedicated daemon thread (self._flush_thread).
+        Runs in a dedicated daemon thread (self._flush_thread).
         """
         # Open the connection
         while not self._disabled_runtime and not self._periodic_flush_connection.ready:
@@ -149,9 +150,8 @@ class Runtime(object):
             time.sleep(self._periodic_flush_seconds)
 
     def _flush_worker(self, connection):
-        """ Use the given connection to transmit the current logs and spans
-            as a report request.
-        """
+        """Use the given connection to transmit the current logs and spans as a
+        report request."""
         if not connection.ready:
             return False
 
@@ -169,8 +169,7 @@ class Runtime(object):
             return False
 
     def _construct_report_request(self):
-        """ Construct a report request.
-        """
+        """Construct a report request."""
         with self._mutex:
             report = ttypes.ReportRequest(self._runtime, self._span_records,
                                           self._log_records)
@@ -179,7 +178,7 @@ class Runtime(object):
             return report
 
     def _add_log(self, log):
-        """ Safely add a log to the buffer.
+        """Safely add a log to the buffer.
 
         Will delete a previously-added log if the limit has been reached.
         """
@@ -194,7 +193,7 @@ class Runtime(object):
                 self._log_records.append(log)
 
     def _add_span(self, span):
-        """ Safely add a span to the buffer.
+        """Safely add a span to the buffer.
 
         Will delete a previously-added span if the limit has been reached.
         """
@@ -209,9 +208,8 @@ class Runtime(object):
                 self._span_records.append(span)
 
     def _store_on_disconnect(self, report_request):
-        """ Store logs and the spans from a report request in the runtime's
-            buffers.
-        """
+        """Store logs and the spans from a report request in the runtime's
+        buffers."""
         for log in report_request.log_records:
             self._add_log(log)
         for span in report_request.span_records:

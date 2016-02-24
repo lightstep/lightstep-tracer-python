@@ -7,9 +7,7 @@ DEFAULT_LOGGER = logging.getLogger(__name__)
 
 
 class NullReporter(object):
-    """
-    Ignores all spans.
-    """
+    """Ignores all spans."""
     def __init__(self):
         self._runtime_guid = util._generate_guid()
         self.logger = logger if logger else DEFAULT_LOGGER
@@ -17,16 +15,14 @@ class NullReporter(object):
     def report_span(self, span):
         pass
 
-    def close(self):
+    def flush(self):
         return True
 
 def _pretty_logs(logs):
     return ''.join(['\n  ' + pprint.pformat(log) for log in logs])
 
 class LoggingReporter(object):
-    """
-    Logs all spans to console.
-    """
+    """Logs all spans to console."""
     def __init__(self, logger=None):
         self._runtime_guid = util._generate_guid()
         self.logger = logger if logger else DEFAULT_LOGGER
@@ -34,7 +30,7 @@ class LoggingReporter(object):
     def report_span(self, span):
         logging.warn('Reporting span %s \n with logs %s', pprint.pformat(vars(span.span_record)), _pretty_logs(span.logs))
 
-    def close(self):
+    def flush(self):
         return True
 
 class LightStepReporter(object):
@@ -47,13 +43,12 @@ class LightStepReporter(object):
         for log in span.logs:
             self.runtime._add_log(log)
 
-    def close(self):
-        self.runtime.shutdown()
+    def flush(self):
+        self.runtime.flush()
         return True
 
 class MockReporter(object):
-    """ MockReporter is used to debug and test Tracer.
-    """
+    """MockReporter is used to debug and test Tracer."""
     def __init__(self):
         self._runtime_guid = util._generate_guid()
         self.spans = []
@@ -61,10 +56,9 @@ class MockReporter(object):
     def report_span(self, span):
         self.spans.append(span)
 
-    def close():
+    def flush():
         pass
 
     def clear(self):
-        """ Delete the current spans.
-        """
+        """Delete the current spans."""
         self.spans[:] = []

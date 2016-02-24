@@ -1,5 +1,4 @@
-""" Constants
-"""
+"""Constants"""
 
 # Runtime constants
 FLUSH_THREAD_NAME = 'Flush Thread'

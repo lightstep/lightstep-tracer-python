@@ -17,7 +17,6 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import opentracing
 import opentracing.ext.tags
 
-import lightstep.helpers
 import lightstep.tracer
 
 class RemoteHandler(BaseHTTPRequestHandler):
@@ -26,54 +25,57 @@ class RemoteHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         with before_answering_request(self, opentracing.tracer) as server_span:
 
-            server_span.info('Received request for %s', self.path)
+            server_span.log_event('request received', self.path)
 
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write("Hello World!")
 
-            server_span.info('Finished preparing response for %s', self.path)
+            server_span.log_event('prepared response', self.path)
 
 
 def before_sending_request(request, parent_span):
     """Context manager creates Span and encodes the span's TraceContext into request.
     """
     operation = 'Sending request'
-    if parent_span is None:
-        span = opentracing.tracer.start_trace(operation_name=operation)
-    else:
-        span = parent_span.start_child(operation_name=operation)
-
+    span = opentracing.tracer.start_span(operation_name=operation, parent=parent_span)
     span.set_tag('server.http.url', request.get_full_url())
     host = request.get_host()
     if host:
         span.set_tag(opentracing.ext.tags.PEER_HOST_IPV4, host)
 
-    lightstep.helpers.trace_context_writer(span.trace_context,
-                                           opentracing.tracer,
-                                           add=request.add_header)
+    text_carrier = opentracing.SplitTextCarrier()
+    span.tracer.injector(opentracing.Format.SPLIT_TEXT).inject_span(
+        span, text_carrier)
+    for k, v in text_carrier.tracer_state.iteritems():
+        request.add_header(k, v)
+    for k, v in text_carrier.baggage.iteritems():
+        request.add_header(k, v)
     return span
 
 
 def before_answering_request(handler, tracer):
     """Context manager creates a Span, using TraceContext encoded in handler if possible.
     """
-    context = lightstep.helpers.trace_context_from_tuples(handler.headers.items(),
-                                                          opentracing.tracer)
-    operation = 'Answering request ' + handler.path
-    if context is None:
+    operation = 'handle_request:' + handler.path
+    text_carrier = opentracing.SplitTextCarrier()
+    plain_text_map = {}
+    for k, v in handler.headers.items():
+        plain_text_map[k.lower()] = v  # inefficient and possibly unnecessary...
+    text_carrier.tracer_state = plain_text_map
+    text_carrier.baggage = plain_text_map
+    span = tracer.extractor(opentracing.Format.SPLIT_TEXT).join_trace(
+        operation, text_carrier)
+
+    if span is None:
         print 'ERROR: Context missing, starting new trace'
         global _exit_code
         _exit_code = errno.ENOMSG
-        span = tracer.start_trace(operation_name=operation)
+        span = tracer.start_span(operation_name=operation)
         headers = ', '.join({k + '=' + v for k, v in handler.headers.items()})
-        span.error('Could not extract trace context from http headers: %s', headers)
+        span.log_event('extraction_failed', headers)
         print 'Could not extract trace context from http headers: ' + headers
-    else:
-        print 'Context received, joining remote trace'
-        span = tracer.join_trace(operation_name=operation,
-                                 parent_trace_context=context)
 
     host, port = handler.client_address
     if host:
@@ -100,13 +102,13 @@ def lightstep_tracer_from_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--token', help='Your LightStep access token.')
     parser.add_argument('--host', help='The LightStep reporting service host to contact.',
-                        default='localhost')
+                        default='collector.lightstep.com')
     parser.add_argument('--port', help='The LightStep reporting service port.',
-                        type=int, default=9997)
+                        type=int, default=443)
     parser.add_argument('--use_tls', help='Whether to use TLS for reporting',
-                        type=bool, default=False)
-    parser.add_argument('--group-name', help='The LightStep runtime group',
-                        default='Python-Opentracing-Remote')
+                        type=bool, default=True)
+    parser.add_argument('--group_name', help='The LightStep runtime group',
+                        default='context_in_headers_example')
     args = parser.parse_args()
 
     if args.use_tls:
@@ -146,13 +148,16 @@ if __name__ == '__main__':
         with before_sending_request(request=request,
                                     parent_span=None) as client_span:
 
-            client_span.info('About to send request to %s', url)
+            client_span.log_event('sending request', url)
 
             # Send request to server
             response = urllib2.urlopen(request)
 
             response_body = response.read()
-            client_span.info('Server returned %d: %s', response.code, response_body)
+            client_span.log_event('server returned', {
+                "code": response.code,
+                "body": response_body,
+            })
 
         print 'Server returned ' + str(response.code) + ': ' + response_body
 
