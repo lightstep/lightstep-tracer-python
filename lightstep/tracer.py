@@ -12,6 +12,7 @@ import json
 import threading
 import time
 import traceback
+import urllib
 import warnings
 
 import jsonpickle
@@ -21,10 +22,12 @@ from .crouton import ttypes
 from . import constants, reporter as reporter_module, util
 
 
-_TRACER_STATE_PREFIX = "ts-"
-_BAGGAGE_PREFIX = "bg-"
-_FIELD_NAME_TRACE_GUID = 'traceguid'
-_FIELD_NAME_SPAN_GUID = 'spanguid'
+_TRACER_STATE_PREFIX = "ot-tracer-"
+_BAGGAGE_PREFIX = "ot-baggage-"
+_BAGGAGE_PREFIX_LEN = len(_BAGGAGE_PREFIX)
+_FIELD_NAME_TRACE_GUID = 'traceid'
+_FIELD_NAME_SPAN_GUID = 'spanid'
+_FIELD_NAME_SAMPLED = 'sampled'
 """ Note that these strings are lowercase because HTTP headers mess with capitalization.
 """
 
@@ -49,11 +52,11 @@ def init_debug_tracer():
     LightStep."""
     return Tracer(reporter_module.LoggingReporter())
 
-
 class Span(opentracing.Span):
     """A LightStep implementation of opentracing.Span."""
 
     def __init__(self, operation_name, tracer, parent=None, tags=None, start_time=None):
+
         super(Span, self).__init__(tracer)
 
         # Set up the tracer state and baggage.
@@ -74,12 +77,14 @@ class Span(opentracing.Span):
             oldest_micros = util._now_micros()
         else:
             oldest_micros = util._time_to_micros(start_time)
+
+        # Thrift is picky about the types being right, so be explicit here
         self.span_record = ttypes.SpanRecord(
-            span_guid=self.span_guid,
-            runtime_guid=tracer._runtime_guid,
-            span_name=operation_name,
+            span_guid=str(self.span_guid),
+            runtime_guid=str(tracer._runtime_guid),
+            span_name=str(operation_name),
             join_ids=[],
-            oldest_micros=oldest_micros,
+            oldest_micros=long(oldest_micros),
             attributes=[],
         )
         self._set_join_id('trace_guid', self.trace_guid)
@@ -101,17 +106,13 @@ class Span(opentracing.Span):
         if not isinstance(key, basestring):
             warnings.warn('set_tag key must be a string. Tag ignored.', UserWarning, 3)
             return self
-
-        if (isinstance(value, int) or
-            isinstance(value, long) or
-            isinstance(value, float) or
-            isinstance(value, bool)):
-            # The Thrift binary protocol being used currently requires all the
-            # tag values to be strings.
-            value = str(value)
-        if not isinstance(value, basestring):
-            warnings.warn('set_tag value must be coerce-able to a string. Tag ignored.', UserWarning, 3)
+        if value == None:
+            warning.warn('set_tag value not valid. Tag ignored.', UserWarning, 3)
             return self
+
+        # Coerce the value to a string as the Thrift binary protocol does not
+        # accept type-mismatches
+        value = str(value)
 
         # TODO(misha): Canonicalize key more thoroughly.
         key = key.lower()
@@ -124,17 +125,17 @@ class Span(opentracing.Span):
 
     def _set_join_id(self, key, value):
         with self.update_lock:
-            trace_join_id = ttypes.TraceJoinId(key, value)
+            trace_join_id = ttypes.TraceJoinId(str(key), str(value))
             self.span_record.join_ids.append(trace_join_id)
 
     def _set_attribute(self, key, value):
         with self.update_lock:
-            attribute = ttypes.KeyValue(key, value)
+            attribute = ttypes.KeyValue(str(key), str(value))
             self.span_record.attributes.append(attribute)
 
     def set_baggage_item(self, key, value):
         with self.update_lock:
-            self.baggage[key.lower()] = value
+            self.baggage[str(key).lower()] = str(value)
         return self
 
     def get_baggage_item(self, key):
@@ -146,12 +147,12 @@ class Span(opentracing.Span):
                 return None
 
     def log_event(self, event, payload=None):
-        return self._log_explicit(time.time(), event, payload)
+        return self._log_explicit(util._now_micros(), event, payload)
 
     def log(self, **kwargs):
-        timestamp = (kwargs["timestamp"]
+        timestamp = (util._time_to_micros(kwargs["timestamp"])
                      if kwargs.has_key("timestamp")
-                     else time.time())
+                     else util._now_micros())
         event = (kwargs["event"]
                  if kwargs.has_key("event")
                  else "")
@@ -162,10 +163,19 @@ class Span(opentracing.Span):
         return self._log_explicit(timestamp, event, payload)
 
     def _log_explicit(self, timestamp, event, payload=None):
+        if timestamp == None:
+            timestamp = util._now_micros()
+        elif not isinstance(timestamp, (int, long)):
+            warnings.warn('Invalid type for timestamp on log. Dropping log. Type:' + str(type(timestamp)), UserWarning, 3)
+            return
+
+        if event != None:
+            event = str(event)
+
         log_record = ttypes.LogRecord(
-            timestamp_micros=util._now_micros(),
-            runtime_guid=self.span_record.runtime_guid,
-            span_guid=self.span_guid,
+            timestamp_micros=long(timestamp),
+            runtime_guid=str(self.span_record.runtime_guid),
+            span_guid=str(self.span_guid),
             stable_name=event,
             level=constants.INFO_LOG,
             error_flag=False,
@@ -202,8 +212,6 @@ class Tracer(object):
         self.reporter = reporter
         self._runtime_guid = reporter._runtime_guid
         self.join_tag_prefix = join_tag_prefix.lower()
-        self._split_text_ie = _SplitTextInjectorExtractor(self)
-        self._split_binary_ie = _SplitBinaryInjectorExtractor(self)
 
     def start_span(self,
                    operation_name=None,
@@ -216,19 +224,40 @@ class Tracer(object):
                     tags=tags,
                     start_time=start_time)
 
-    def injector(self, format):
-        if format == opentracing.Format.SPLIT_TEXT:
-            return self._split_text_ie
-        elif format == opentracing.Format.SPLIT_BINARY:
-            return self._split_binary_ie
+    def inject(self, span, format, carrier):
+        if format == opentracing.Format.TEXT_MAP:
+            carrier.update({
+                _TRACER_STATE_PREFIX + _FIELD_NAME_TRACE_GUID: span.trace_guid,
+                _TRACER_STATE_PREFIX + _FIELD_NAME_SPAN_GUID: span.span_guid,
+                # basictracer compatibility:
+                _TRACER_STATE_PREFIX + _FIELD_NAME_SAMPLED: "true",
+                })
+            for k, v in span.baggage.iteritems():
+                carrier[_BAGGAGE_PREFIX + k] = urllib.quote(v)
+            return
+        elif format == opentracing.Format.BINARY:
+            # TODO: create a basictracer-python impl that uses the .proto
+            # encoding from basictracer-go.
+            raise NotImplementedError()
         else:
             raise NotImplementedError()
 
-    def extractor(self, format):
-        if format == opentracing.Format.SPLIT_TEXT:
-            return self._split_text_ie
-        elif format == opentracing.Format.SPLIT_BINARY:
-            return self._split_binary_ie
+    def join(self, operation_name, format, carrier):
+        if format == opentracing.Format.TEXT_MAP:
+            decoded_baggage = {}
+            for k in carrier:
+                if k.lower().startswith(_BAGGAGE_PREFIX):
+                    decoded_baggage[k.lower()[_BAGGAGE_PREFIX_LEN:]] = urllib.unquote(carrier.baggage[k])
+            duck_parent = type('', (), {
+                'trace_guid': carrier[_TRACER_STATE_PREFIX + _FIELD_NAME_TRACE_GUID],
+                'span_guid': carrier[_TRACER_STATE_PREFIX + _FIELD_NAME_SPAN_GUID],
+                'baggage': decoded_baggage,
+            })
+            return Span(operation_name, self, parent=duck_parent)
+        elif format == opentracing.Format.BINARY:
+            # TODO: create a basictracer-python impl that uses the .proto
+            # encoding from basictracer-go.
+            raise NotImplementedError()
         else:
             raise NotImplementedError()
 
@@ -237,52 +266,3 @@ class Tracer(object):
 
     def flush(self):
         return self.reporter.flush()
-
-
-class _SplitTextInjectorExtractor:
-    def __init__(self, tracer):
-        self._tracer = tracer
-
-    def inject_span(self, span, carrier):
-        carrier.tracer_state = {
-            _TRACER_STATE_PREFIX + _FIELD_NAME_TRACE_GUID: span.trace_guid,
-            _TRACER_STATE_PREFIX + _FIELD_NAME_SPAN_GUID: span.span_guid,
-        }
-        carrier.baggage = {}
-        for k, v in span.baggage.iteritems():
-            carrier.baggage[_BAGGAGE_PREFIX + k] = v
-
-    def join_trace(self, operation_name, carrier):
-        decoded_baggage = {}
-        for k in carrier.baggage:
-            if k.lower().startswith(_BAGGAGE_PREFIX):
-                decoded_baggage[k.lower()[len(_BAGGAGE_PREFIX):]] = carrier.baggage[k]
-        duck_parent = type('', (), {
-            'trace_guid': carrier.tracer_state[_TRACER_STATE_PREFIX + _FIELD_NAME_TRACE_GUID],
-            'span_guid': carrier.tracer_state[_TRACER_STATE_PREFIX + _FIELD_NAME_SPAN_GUID],
-            'baggage': decoded_baggage,
-        })
-        return Span(operation_name, self._tracer, parent=duck_parent)
-
-
-# TODO: settle on an efficient in-band binary format for LightStep.
-class _SplitBinaryInjectorExtractor:
-    def __init__(self, tracer):
-        self._tracer = tracer
-
-    def inject_span(self, span, carrier):
-        ts_dict = {
-            _FIELD_NAME_TRACE_GUID: span.trace_guid,
-            _FIELD_NAME_SPAN_GUID: span.span_guid,
-        }
-        carrier.tracer_state = bytearray(json.dumps(ts_dict))
-        carrier.baggage = bytearray(json.dumps(span.baggage))
-
-    def join_trace(self, operation_name, carrier):
-        ts_dict = json.loads(carrier.tracer_state.decode('utf-8'))
-        duck_parent = type('', (), {
-            'trace_guid': ts_dict[_FIELD_NAME_TRACE_GUID],
-            'span_guid': ts_dict[_FIELD_NAME_SPAN_GUID],
-            'baggage': json.loads(carrier.baggage.decode('utf-8')),
-        })
-        return Span(operation_name, self._tracer, parent=duck_parent)

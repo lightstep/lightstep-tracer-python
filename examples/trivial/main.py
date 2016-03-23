@@ -33,12 +33,14 @@ def add_spans():
             child_span.set_tag('span_type', 'child')
             sleep_dot()
 
-            # To connect remote calls, pass a trace context down the wire.
-            split_text_carrier = opentracing.SplitTextCarrier()
-            opentracing.tracer.injector(opentracing.Format.SPLIT_TEXT).inject_span(
-                child_span, split_text_carrier)
-            with opentracing.tracer.extractor(opentracing.Format.SPLIT_TEXT).join_trace(
-                'trivial/remote_span', split_text_carrier) as remote_span:
+            # Play with the propagation APIs... this is not IPC and thus not
+            # where they're intended to be used.
+            text_carrier = {}
+            opentracing.tracer.inject(child_span, opentracing.Format.TEXT_MAP, text_carrier)
+            with opentracing.tracer.join(
+                    'trivia/remote_span',
+                    opentracing.Format.TEXT_MAP,
+                    text_carrier) as remote_span:
                 remote_span.log_event('Remote!')
                 remote_span.set_tag('span_type', 'remote')
                 sleep_dot()
@@ -80,10 +82,7 @@ if __name__ == '__main__':
 
     # Use opentracing's default no-op implementation
     opentracing.tracer = opentracing.Tracer()
-    try:
-        add_spans()
-    finally:
-        opentracing.tracer.flush()
+    add_spans()
 
     # Use LightStep's debug tracer, which logs to the console instead of
     # reporting to LightStep.

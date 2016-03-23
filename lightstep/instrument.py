@@ -42,6 +42,11 @@ class Runtime(object):
                  max_span_records=constants.DEFAULT_MAX_SPAN_RECORDS,
                  certificate_verification=True,
                  periodic_flush_seconds=constants.FLUSH_PERIOD_SECS):
+
+        # Fail fast on a bad access token
+        if isinstance(access_token, basestring) == False:
+            raise Exception('access_token must be a string')
+
         if certificate_verification is False:
             warnings.warn('SSL CERTIFICATE VERIFICATION turned off. ALL FUTURE HTTPS calls will be unverified.')
             ssl._create_default_https_context = ssl._create_unverified_context
@@ -56,7 +61,9 @@ class Runtime(object):
             ttypes.KeyValue("cruntime_version", cruntime_version.CRUNTIME_VERSION),
             ttypes.KeyValue("python_version", version),
         ]
-        self._runtime = ttypes.Runtime(guid, timestamp, group_name, attrs)
+
+        # Thrift is picky about the types being correct, so we're explicit here
+        self._runtime = ttypes.Runtime(str(guid), long(timestamp), str(group_name), attrs)
         self._service_url = util._service_url_from_hostport(secure,
                                                             service_host,
                                                             service_port)

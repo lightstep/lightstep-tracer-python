@@ -45,12 +45,9 @@ def before_sending_request(request, parent_span):
     if host:
         span.set_tag(opentracing.ext.tags.PEER_HOST_IPV4, host)
 
-    text_carrier = opentracing.SplitTextCarrier()
-    span.tracer.injector(opentracing.Format.SPLIT_TEXT).inject_span(
-        span, text_carrier)
-    for k, v in text_carrier.tracer_state.iteritems():
-        request.add_header(k, v)
-    for k, v in text_carrier.baggage.iteritems():
+    text_carrier = {}
+    span.tracer.inject(span, opentracing.Format.TEXT_MAP, text_carrier)
+    for k, v in text_carrier.iteritems():
         request.add_header(k, v)
     return span
 
@@ -59,14 +56,10 @@ def before_answering_request(handler, tracer):
     """Context manager creates a Span, using TraceContext encoded in handler if possible.
     """
     operation = 'handle_request:' + handler.path
-    text_carrier = opentracing.SplitTextCarrier()
-    plain_text_map = {}
+    text_carrier = {}
     for k, v in handler.headers.items():
-        plain_text_map[k.lower()] = v  # inefficient and possibly unnecessary...
-    text_carrier.tracer_state = plain_text_map
-    text_carrier.baggage = plain_text_map
-    span = tracer.extractor(opentracing.Format.SPLIT_TEXT).join_trace(
-        operation, text_carrier)
+        text_carrier[k] = v
+    span = tracer.join(operation, opentracing.Format.TEXT_MAP, text_carrier)
 
     if span is None:
         print 'ERROR: Context missing, starting new trace'
@@ -74,8 +67,8 @@ def before_answering_request(handler, tracer):
         _exit_code = errno.ENOMSG
         span = tracer.start_span(operation_name=operation)
         headers = ', '.join({k + '=' + v for k, v in handler.headers.items()})
-        span.log_event('extraction_failed', headers)
-        print 'Could not extract trace context from http headers: ' + headers
+        span.log_event('join_failed', headers)
+        print 'Could not join trace from http headers: ' + headers
 
     host, port = handler.client_address
     if host:

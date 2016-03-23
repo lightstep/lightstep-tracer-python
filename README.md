@@ -14,8 +14,8 @@ pip install lightstep
 
 ## Getting Started
 
-Please see the [example programs](examples/) for examples of how to use this library.
-In particular:
+Please see the [example programs](examples/) for examples of how to use this library. In particular:
+
 * [Trivial Example](examples/trivial/main.py) shows how to use the library on a single host.
 * [Context in Headers](examples/http/context_in_headers.py) shows how to pass a `TraceContext` through `HTTP` headers.
 

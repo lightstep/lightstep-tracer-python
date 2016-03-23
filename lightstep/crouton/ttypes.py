@@ -603,6 +603,7 @@ class SpanRecord:
    - youngest_micros
    - attributes
    - error_flag
+   - log_records
   """
 
   thrift_spec = (
@@ -616,9 +617,10 @@ class SpanRecord:
     None, # 7
     (8, TType.LIST, 'attributes', (TType.STRUCT,(KeyValue, KeyValue.thrift_spec)), None, ), # 8
     (9, TType.BOOL, 'error_flag', None, None, ), # 9
+    (10, TType.LIST, 'log_records', (TType.STRUCT,(LogRecord, LogRecord.thrift_spec)), None, ), # 10
   )
 
-  def __init__(self, span_guid=None, runtime_guid=None, span_name=None, join_ids=None, oldest_micros=None, youngest_micros=None, attributes=None, error_flag=None,):
+  def __init__(self, span_guid=None, runtime_guid=None, span_name=None, join_ids=None, oldest_micros=None, youngest_micros=None, attributes=None, error_flag=None, log_records=None,):
     self.span_guid = span_guid
     self.runtime_guid = runtime_guid
     self.span_name = span_name
@@ -627,6 +629,7 @@ class SpanRecord:
     self.youngest_micros = youngest_micros
     self.attributes = attributes
     self.error_flag = error_flag
+    self.log_records = log_records
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -689,6 +692,17 @@ class SpanRecord:
           self.error_flag = iprot.readBool();
         else:
           iprot.skip(ftype)
+      elif fid == 10:
+        if ftype == TType.LIST:
+          self.log_records = []
+          (_etype29, _size26) = iprot.readListBegin()
+          for _i30 in xrange(_size26):
+            _elem31 = LogRecord()
+            _elem31.read(iprot)
+            self.log_records.append(_elem31)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -714,8 +728,8 @@ class SpanRecord:
     if self.join_ids is not None:
       oprot.writeFieldBegin('join_ids', TType.LIST, 4)
       oprot.writeListBegin(TType.STRUCT, len(self.join_ids))
-      for iter26 in self.join_ids:
-        iter26.write(oprot)
+      for iter32 in self.join_ids:
+        iter32.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.oldest_micros is not None:
@@ -729,13 +743,20 @@ class SpanRecord:
     if self.attributes is not None:
       oprot.writeFieldBegin('attributes', TType.LIST, 8)
       oprot.writeListBegin(TType.STRUCT, len(self.attributes))
-      for iter27 in self.attributes:
-        iter27.write(oprot)
+      for iter33 in self.attributes:
+        iter33.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.error_flag is not None:
       oprot.writeFieldBegin('error_flag', TType.BOOL, 9)
       oprot.writeBool(self.error_flag)
+      oprot.writeFieldEnd()
+    if self.log_records is not None:
+      oprot.writeFieldBegin('log_records', TType.LIST, 10)
+      oprot.writeListBegin(TType.STRUCT, len(self.log_records))
+      for iter34 in self.log_records:
+        iter34.write(oprot)
+      oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -754,6 +775,7 @@ class SpanRecord:
     value = (value * 31) ^ hash(self.youngest_micros)
     value = (value * 31) ^ hash(self.attributes)
     value = (value * 31) ^ hash(self.error_flag)
+    value = (value * 31) ^ hash(self.log_records)
     return value
 
   def __repr__(self):
@@ -1053,22 +1075,22 @@ class ReportRequest:
       elif fid == 3:
         if ftype == TType.LIST:
           self.span_records = []
-          (_etype31, _size28) = iprot.readListBegin()
-          for _i32 in xrange(_size28):
-            _elem33 = SpanRecord()
-            _elem33.read(iprot)
-            self.span_records.append(_elem33)
+          (_etype38, _size35) = iprot.readListBegin()
+          for _i39 in xrange(_size35):
+            _elem40 = SpanRecord()
+            _elem40.read(iprot)
+            self.span_records.append(_elem40)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 4:
         if ftype == TType.LIST:
           self.log_records = []
-          (_etype37, _size34) = iprot.readListBegin()
-          for _i38 in xrange(_size34):
-            _elem39 = LogRecord()
-            _elem39.read(iprot)
-            self.log_records.append(_elem39)
+          (_etype44, _size41) = iprot.readListBegin()
+          for _i45 in xrange(_size41):
+            _elem46 = LogRecord()
+            _elem46.read(iprot)
+            self.log_records.append(_elem46)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1090,11 +1112,11 @@ class ReportRequest:
       elif fid == 9:
         if ftype == TType.LIST:
           self.counters = []
-          (_etype43, _size40) = iprot.readListBegin()
-          for _i44 in xrange(_size40):
-            _elem45 = NamedCounter()
-            _elem45.read(iprot)
-            self.counters.append(_elem45)
+          (_etype50, _size47) = iprot.readListBegin()
+          for _i51 in xrange(_size47):
+            _elem52 = NamedCounter()
+            _elem52.read(iprot)
+            self.counters.append(_elem52)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1115,15 +1137,15 @@ class ReportRequest:
     if self.span_records is not None:
       oprot.writeFieldBegin('span_records', TType.LIST, 3)
       oprot.writeListBegin(TType.STRUCT, len(self.span_records))
-      for iter46 in self.span_records:
-        iter46.write(oprot)
+      for iter53 in self.span_records:
+        iter53.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.log_records is not None:
       oprot.writeFieldBegin('log_records', TType.LIST, 4)
       oprot.writeListBegin(TType.STRUCT, len(self.log_records))
-      for iter47 in self.log_records:
-        iter47.write(oprot)
+      for iter54 in self.log_records:
+        iter54.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.timestamp_offset_micros is not None:
@@ -1141,8 +1163,8 @@ class ReportRequest:
     if self.counters is not None:
       oprot.writeFieldBegin('counters', TType.LIST, 9)
       oprot.writeListBegin(TType.STRUCT, len(self.counters))
-      for iter48 in self.counters:
-        iter48.write(oprot)
+      for iter55 in self.counters:
+        iter55.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -1271,11 +1293,11 @@ class ReportResponse:
       if fid == 1:
         if ftype == TType.LIST:
           self.commands = []
-          (_etype52, _size49) = iprot.readListBegin()
-          for _i53 in xrange(_size49):
-            _elem54 = Command()
-            _elem54.read(iprot)
-            self.commands.append(_elem54)
+          (_etype59, _size56) = iprot.readListBegin()
+          for _i60 in xrange(_size56):
+            _elem61 = Command()
+            _elem61.read(iprot)
+            self.commands.append(_elem61)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1288,10 +1310,10 @@ class ReportResponse:
       elif fid == 3:
         if ftype == TType.LIST:
           self.errors = []
-          (_etype58, _size55) = iprot.readListBegin()
-          for _i59 in xrange(_size55):
-            _elem60 = iprot.readString();
-            self.errors.append(_elem60)
+          (_etype65, _size62) = iprot.readListBegin()
+          for _i66 in xrange(_size62):
+            _elem67 = iprot.readString();
+            self.errors.append(_elem67)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1308,8 +1330,8 @@ class ReportResponse:
     if self.commands is not None:
       oprot.writeFieldBegin('commands', TType.LIST, 1)
       oprot.writeListBegin(TType.STRUCT, len(self.commands))
-      for iter61 in self.commands:
-        iter61.write(oprot)
+      for iter68 in self.commands:
+        iter68.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.timing is not None:
@@ -1319,8 +1341,8 @@ class ReportResponse:
     if self.errors is not None:
       oprot.writeFieldBegin('errors', TType.LIST, 3)
       oprot.writeListBegin(TType.STRING, len(self.errors))
-      for iter62 in self.errors:
-        oprot.writeString(iter62)
+      for iter69 in self.errors:
+        oprot.writeString(iter69)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
