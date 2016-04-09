@@ -1,5 +1,7 @@
 # LightStep OpenTracing Bindings
 
+[![Circle CI](https://circleci.com/gh/lightstep/lightstep-tracer-python.svg?style=shield)](https://circleci.com/gh/lightstep/lightstep-tracer-python)
+
 This library is the LightStep binding for [OpenTracing](http://opentracing.io/). See the [OpenTracing Python API](https://github.com/opentracing/opentracing-python) for additional detail.
 
 * [Installation](#installation)

@@ -1,0 +1,6 @@
+machine:
+    python:
+        version: python2.7.10
+test:
+    override:
+        - make test
