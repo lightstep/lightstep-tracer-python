@@ -4,7 +4,8 @@
 
 default: test
 
-build: lint
+build:
+	echo "Nothing to build"
 
 lint:
 	pylint -r n --disable=invalid-name,global-statement,bare-except \
@@ -13,7 +14,7 @@ lint:
 docs:
 	cd docs && make html
 
-dist: build docs inc-version
+dist: build lint docs inc-version
 	mkdir -p dist
 	rm -rf dist
 	python setup.py sdist      # source distribution
