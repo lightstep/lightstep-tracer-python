@@ -1,12 +1,10 @@
 .PHONY: build thrift lint docs dist inc-version publish sample-app \
-	test test-util test-runtime test-opentracing
+	test test-util test-runtime test-opentracing \
+	default
 
+default: test
 
-build: thrift lint
-
-thrift:
-	thrift -r -gen py -out lightstep/ $(LIGHTSTEP_HOME)/go/src/crouton/crouton.thrift
-	rm lightstep/crouton/ReportingService-remote
+build: lint
 
 lint:
 	pylint -r n --disable=invalid-name,global-statement,bare-except \
@@ -34,14 +32,16 @@ publish: dist
 sample-app: build
 	python sample/send_spans_logs.py
 
-test: build test-util test-runtime test-opentracing
+test: build
+	python -m unittest tests.util_test
+	python -m unittest tests.runtime_test
+	python -m unittest tests.opentracing_compatibility_test
 	tox
 
-test-util:
-	python tests/util_test.py
 
-test-runtme:
-	python tests/runtime_test.py
-
-test-opentracing:
-	python tests/opentracing_compatibility_test.py
+# LightStep-specific: rebuilds the LightStep thrift protocol files.  Assumes
+# the command is run within the LightStep development environment (i.e. the
+# LIGHTSTEP_HOME environment variable is set).
+thrift:
+	thrift -r -gen py -out lightstep/ $(LIGHTSTEP_HOME)/go/src/crouton/crouton.thrift
+	rm lightstep/crouton/ReportingService-remote
