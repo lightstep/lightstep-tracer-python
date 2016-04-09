@@ -33,9 +33,6 @@ sample-app: build
 	python sample/send_spans_logs.py
 
 test: build
-	python -m unittest tests.util_test
-	python -m unittest tests.runtime_test
-	python -m unittest tests.opentracing_compatibility_test
 	tox
 
 
