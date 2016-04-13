@@ -4,6 +4,8 @@ import random
 import time
 from . import constants
 
+guid_rng = random.Random()   # Uses urandom seed
+
 def _service_url_from_hostport(secure, host, port):
     """
     Create an appropriate service URL given the parameters.
@@ -20,7 +22,7 @@ def _generate_guid():
     """
     Construct a guid - random 64 bit integer converted to a string.
     """
-    return str(random.getrandbits(64))
+    return str(guid_rng.getrandbits(64))
 
 def _now_micros():
     """
