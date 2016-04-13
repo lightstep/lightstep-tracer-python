@@ -1,6 +1,6 @@
 """ Utility functions
 """
-import uuid
+import random
 import time
 from . import constants
 
@@ -20,9 +20,7 @@ def _generate_guid():
     """
     Construct a guid - random 64 bit integer converted to a string.
     """
-    # Note: uuid.uuid4() returns 128 bit int. To get 64 bit int, apply the mask.
-    guid = uuid.uuid4().int & (1<<64)-1
-    return str(guid)
+    return str(random.getrandbits(64))
 
 def _now_micros():
     """
