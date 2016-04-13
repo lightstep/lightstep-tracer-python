@@ -32,7 +32,7 @@ def _time_to_micros(t):
     """
     Convert a time.time()-style timestamp to microseconds.
     """
-    return long(round(time.time() * constants.SECONDS_TO_MICRO))
+    return long(round(t * constants.SECONDS_TO_MICRO))
 
 def _merge_dicts(*dict_args):
     """Destructively merges dictionaries, returns None instead of an empty dictionary.
