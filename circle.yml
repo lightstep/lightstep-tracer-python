@@ -5,6 +5,6 @@ test:
     override:
         - make test
 general:
-  branches:
-    only:
-      - master
+    branches:
+        only:
+            - master
