@@ -124,13 +124,13 @@ class Span(opentracing.Span):
         return self
 
     def _set_join_id(self, key, value):
+        trace_join_id = ttypes.TraceJoinId(str(key), str(value))
         with self.update_lock:
-            trace_join_id = ttypes.TraceJoinId(str(key), str(value))
             self.span_record.join_ids.append(trace_join_id)
 
     def _set_attribute(self, key, value):
+        attribute = ttypes.KeyValue(str(key), str(value))
         with self.update_lock:
-            attribute = ttypes.KeyValue(str(key), str(value))
             self.span_record.attributes.append(attribute)
 
     def set_baggage_item(self, key, value):
@@ -141,26 +141,15 @@ class Span(opentracing.Span):
     def get_baggage_item(self, key):
         canon_key = key.lower()
         with self.update_lock:
-            if self.baggage.has_key(canon_key):
-                return self.baggage[canon_key]
-            else:
-                return None
+            return self.baggage.get(canon_key)
 
     def log_event(self, event, payload=None):
-        return self._log_explicit(util._now_micros(), event, payload)
+        return self._log_explicit(None, event, payload)
 
     def log(self, **kwargs):
-        timestamp = (util._time_to_micros(kwargs["timestamp"])
-                     if kwargs.has_key("timestamp")
-                     else util._now_micros())
-        event = (kwargs["event"]
-                 if kwargs.has_key("event")
-                 else "")
-        payload = (kwargs["payload"]
-                   if kwargs.has_key("payload")
-                   else None)
-
-        return self._log_explicit(timestamp, event, payload)
+        return self._log_explicit(kwargs.get("timestamp"),
+                                  kwargs.get("event", ""),
+                                  kwargs.get("payload"))
 
     def _log_explicit(self, timestamp, event, payload=None):
         if timestamp == None:
