@@ -71,7 +71,6 @@ class Span(opentracing.Span):
             self.span_guid = util._generate_guid()
             self.baggage = copy.deepcopy(parent.baggage)
 
-        self.update_lock = threading.Lock()
         self.logs = []
         if start_time is None:
             oldest_micros = util._now_micros()
@@ -93,13 +92,11 @@ class Span(opentracing.Span):
                 self.set_tag(k, v)
 
     def finish(self):
-        with self.update_lock:
-            self.span_record.youngest_micros = util._now_micros()
+        self.span_record.youngest_micros = util._now_micros()
         self.tracer._report_span(self)
 
     def set_operation_name(self, operation_name):
-        with self.update_lock:
-            self.span_record.span_name = operation_name
+        self.span_record.span_name = operation_name
         return self
 
     def set_tag(self, key, value):
@@ -125,23 +122,19 @@ class Span(opentracing.Span):
 
     def _set_join_id(self, key, value):
         trace_join_id = ttypes.TraceJoinId(str(key), str(value))
-        with self.update_lock:
-            self.span_record.join_ids.append(trace_join_id)
+        self.span_record.join_ids.append(trace_join_id)
 
     def _set_attribute(self, key, value):
         attribute = ttypes.KeyValue(str(key), str(value))
-        with self.update_lock:
-            self.span_record.attributes.append(attribute)
+        self.span_record.attributes.append(attribute)
 
     def set_baggage_item(self, key, value):
-        with self.update_lock:
-            self.baggage[str(key).lower()] = str(value)
+        self.baggage[str(key).lower()] = str(value)
         return self
 
     def get_baggage_item(self, key):
         canon_key = key.lower()
-        with self.update_lock:
-            return self.baggage.get(canon_key)
+        return self.baggage.get(canon_key)
 
     def log_event(self, event, payload=None):
         return self._log_explicit(None, event, payload)
@@ -180,8 +173,7 @@ class Span(opentracing.Span):
             except:
                 log_record.payload_json = jsonpickle.encode(constants.JSON_FAIL)
 
-        with self.update_lock:
-            self.logs.append(log_record)
+        self.logs.append(log_record)
         return self
 
 
