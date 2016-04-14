@@ -153,8 +153,8 @@ class Span(opentracing.Span):
 
     def _log_explicit(self, timestamp, event, payload=None):
         if timestamp == None:
-            timestamp = util._now_micros()
-        elif not isinstance(timestamp, (int, long)):
+            timestamp = time.time()
+        elif not isinstance(timestamp, (float)):
             warnings.warn('Invalid type for timestamp on log. Dropping log. Type:' + str(type(timestamp)), UserWarning, 3)
             return
 
@@ -162,7 +162,7 @@ class Span(opentracing.Span):
             event = str(event)
 
         log_record = ttypes.LogRecord(
-            timestamp_micros=long(timestamp),
+            timestamp_micros=util._time_to_micros(timestamp),
             runtime_guid=str(self.span_record.runtime_guid),
             span_guid=str(self.span_guid),
             stable_name=event,
