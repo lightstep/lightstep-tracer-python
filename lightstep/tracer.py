@@ -109,6 +109,8 @@ class Span(opentracing.Span):
 
         # Coerce the value to a string as the Thrift binary protocol does not
         # accept type-mismatches
+        # TODO(jmacd): These and other conversions: can they be done
+        # in the background thread?
         value = str(value)
 
         # TODO(misha): Canonicalize key more thoroughly.
@@ -151,27 +153,18 @@ class Span(opentracing.Span):
             warnings.warn('Invalid type for timestamp on log. Dropping log. Type:' + str(type(timestamp)), UserWarning, 3)
             return
 
-        if event != None:
-            event = str(event)
-
         log_record = ttypes.LogRecord(
             timestamp_micros=util._time_to_micros(timestamp),
             runtime_guid=str(self.span_record.runtime_guid),
             span_guid=str(self.span_guid),
-            stable_name=event,
             level=constants.INFO_LOG,
             error_flag=False,
-        )
 
-        if payload is not None:
-            try:
-                log_record.payload_json = \
-                    jsonpickle.encode(payload,
-                                      unpicklable=False,
-                                      make_refs=False,
-                                      max_depth=constants.JSON_MAX_DEPTH)
-            except:
-                log_record.payload_json = jsonpickle.encode(constants.JSON_FAIL)
+            # Note: the following two fields are prepared for encoding
+            # in the background thread.
+            stable_name=event,
+            payload_json=payload,
+        )
 
         self.logs.append(log_record)
         return self
