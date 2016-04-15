@@ -24,6 +24,7 @@ Please see the [example programs](examples/) for examples of how to use this lib
 Or if your python code is already instrumented for OpenTracing, you can simply switch to LightStep's implementation with:
 
 ```python
+import opentracing
 import lightstep.tracer
 
 opentracing.tracer = lightstep.tracer.init_tracer(
