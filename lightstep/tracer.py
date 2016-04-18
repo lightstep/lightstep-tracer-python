@@ -15,7 +15,6 @@ import traceback
 import urllib
 import warnings
 
-import jsonpickle
 import opentracing
 
 from .crouton import ttypes
@@ -71,7 +70,6 @@ class Span(opentracing.Span):
             self.span_guid = util._generate_guid()
             self.baggage = copy.deepcopy(parent.baggage)
 
-        self.update_lock = threading.Lock()
         self.logs = []
         if start_time is None:
             oldest_micros = util._now_micros()
@@ -93,13 +91,11 @@ class Span(opentracing.Span):
                 self.set_tag(k, v)
 
     def finish(self):
-        with self.update_lock:
-            self.span_record.youngest_micros = util._now_micros()
+        self.span_record.youngest_micros = util._now_micros()
         self.tracer._report_span(self)
 
     def set_operation_name(self, operation_name):
-        with self.update_lock:
-            self.span_record.span_name = operation_name
+        self.span_record.span_name = operation_name
         return self
 
     def set_tag(self, key, value):
@@ -112,6 +108,8 @@ class Span(opentracing.Span):
 
         # Coerce the value to a string as the Thrift binary protocol does not
         # accept type-mismatches
+        # TODO(jmacd): These and other conversions: can they be done
+        # in the background thread?
         value = str(value)
 
         # TODO(misha): Canonicalize key more thoroughly.
@@ -124,75 +122,50 @@ class Span(opentracing.Span):
         return self
 
     def _set_join_id(self, key, value):
-        with self.update_lock:
-            trace_join_id = ttypes.TraceJoinId(str(key), str(value))
-            self.span_record.join_ids.append(trace_join_id)
+        trace_join_id = ttypes.TraceJoinId(str(key), str(value))
+        self.span_record.join_ids.append(trace_join_id)
 
     def _set_attribute(self, key, value):
-        with self.update_lock:
-            attribute = ttypes.KeyValue(str(key), str(value))
-            self.span_record.attributes.append(attribute)
+        attribute = ttypes.KeyValue(str(key), str(value))
+        self.span_record.attributes.append(attribute)
 
     def set_baggage_item(self, key, value):
-        with self.update_lock:
-            self.baggage[str(key).lower()] = str(value)
+        self.baggage[str(key).lower()] = str(value)
         return self
 
     def get_baggage_item(self, key):
         canon_key = key.lower()
-        with self.update_lock:
-            if self.baggage.has_key(canon_key):
-                return self.baggage[canon_key]
-            else:
-                return None
+        return self.baggage.get(canon_key)
 
     def log_event(self, event, payload=None):
-        return self._log_explicit(util._now_micros(), event, payload)
+        return self._log_explicit(None, event, payload)
 
     def log(self, **kwargs):
-        timestamp = (util._time_to_micros(kwargs["timestamp"])
-                     if kwargs.has_key("timestamp")
-                     else util._now_micros())
-        event = (kwargs["event"]
-                 if kwargs.has_key("event")
-                 else "")
-        payload = (kwargs["payload"]
-                   if kwargs.has_key("payload")
-                   else None)
-
-        return self._log_explicit(timestamp, event, payload)
+        return self._log_explicit(kwargs.get("timestamp"),
+                                  kwargs.get("event", ""),
+                                  kwargs.get("payload"))
 
     def _log_explicit(self, timestamp, event, payload=None):
         if timestamp == None:
-            timestamp = util._now_micros()
-        elif not isinstance(timestamp, (int, long)):
+            timestamp = time.time()
+        elif not isinstance(timestamp, (float)):
             warnings.warn('Invalid type for timestamp on log. Dropping log. Type:' + str(type(timestamp)), UserWarning, 3)
             return
 
-        if event != None:
-            event = str(event)
-
         log_record = ttypes.LogRecord(
-            timestamp_micros=long(timestamp),
+            timestamp_micros=util._time_to_micros(timestamp),
             runtime_guid=str(self.span_record.runtime_guid),
             span_guid=str(self.span_guid),
-            stable_name=event,
             level=constants.INFO_LOG,
             error_flag=False,
+
+            # Note: the following two fields are prepared for encoding
+            # in the background thread.
+            stable_name=event,
+            payload_json=payload,
         )
 
-        if payload is not None:
-            try:
-                log_record.payload_json = \
-                    jsonpickle.encode(payload,
-                                      unpicklable=False,
-                                      make_refs=False,
-                                      max_depth=constants.JSON_MAX_DEPTH)
-            except:
-                log_record.payload_json = jsonpickle.encode(constants.JSON_FAIL)
-
-        with self.update_lock:
-            self.logs.append(log_record)
+        self.logs.append(log_record)
         return self
 
 

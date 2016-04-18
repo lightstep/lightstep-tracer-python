@@ -3,6 +3,7 @@
 
 import atexit
 import contextlib
+import jsonpickle
 import random
 from socket import error as socket_error
 import ssl
@@ -177,12 +178,27 @@ class Runtime(object):
 
     def _construct_report_request(self):
         """Construct a report request."""
+        report = None
         with self._mutex:
             report = ttypes.ReportRequest(self._runtime, self._span_records,
                                           self._log_records)
             self._span_records = []
             self._log_records = []
-            return report
+
+        for log in report.log_records:
+            if log.stable_name is not None:
+                log.stable_name = str(log.stable_name)
+            if log.payload_json is not None:
+                try:
+                    log.payload_json = \
+                                       jsonpickle.encode(log.payload_json,
+                                                         unpicklable=False,
+                                                         make_refs=False,
+                                                         max_depth=constants.JSON_MAX_DEPTH)
+                except:
+                    log.payload_json = jsonpickle.encode(constants.JSON_FAIL)
+                
+        return report
 
     def _add_log(self, log):
         """Safely add a log to the buffer.

@@ -1,8 +1,10 @@
 """ Utility functions
 """
-import uuid
+import random
 import time
 from . import constants
+
+guid_rng = random.Random()   # Uses urandom seed
 
 def _service_url_from_hostport(secure, host, port):
     """
@@ -20,9 +22,7 @@ def _generate_guid():
     """
     Construct a guid - random 64 bit integer converted to a string.
     """
-    # Note: uuid.uuid4() returns 128 bit int. To get 64 bit int, apply the mask.
-    guid = uuid.uuid4().int & (1<<64)-1
-    return str(guid)
+    return str(guid_rng.getrandbits(64))
 
 def _now_micros():
     """
@@ -34,7 +34,7 @@ def _time_to_micros(t):
     """
     Convert a time.time()-style timestamp to microseconds.
     """
-    return long(round(time.time() * constants.SECONDS_TO_MICRO))
+    return long(round(t * constants.SECONDS_TO_MICRO))
 
 def _merge_dicts(*dict_args):
     """Destructively merges dictionaries, returns None instead of an empty dictionary.
