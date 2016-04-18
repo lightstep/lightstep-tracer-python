@@ -235,27 +235,27 @@ class RuntimeTest(unittest.TestCase):
 
     def test_char_payload(self):
         self.log_payload('a')
-        self.assertEqual(self.mock_reporter.spans[0].logs[0].payload_json, '"a"')
+        self.check_payload('"a"')
 
     def test_bool_payload(self):
         self.log_payload(True)
-        self.assertEqual(self.mock_reporter.spans[0].logs[0].payload_json, 'true')
+        self.check_payload('true')
 
     def test_int_payload(self):
         self.log_payload(-324234234)
-        self.assertEqual(self.mock_reporter.spans[0].logs[0].payload_json, '-324234234')
+        self.check_payload('-324234234')
 
     def test_double_payload(self):
         self.log_payload(3.13123)
-        self.assertEqual(self.mock_reporter.spans[0].logs[0].payload_json, '3.13123')
+        self.check_payload('3.13123')
 
     def test_string_payload(self):
         self.log_payload('Payload String Test')
-        self.assertEqual(self.mock_reporter.spans[0].logs[0].payload_json, '"Payload String Test"')
+        self.check_payload('"Payload String Test"')
 
     def test_list_payload(self):
         self.log_payload(['item1', 'item2'])
-        self.assertEqual(self.mock_reporter.spans[0].logs[0].payload_json, '["item1", "item2"]')
+        self.check_payload('["item1", "item2"]')
 
     def _check_span_payload(self, payload, expected):
         self.mock_reporter.clear()
@@ -437,20 +437,15 @@ class RuntimeTest(unittest.TestCase):
         for i, log in enumerate(logs):
             self.assertEqual(log.stable_name, str(i))
 
-    def check_payload(self, expected_payload, actual_payload=None, escape_chars=False):
+    def check_payload(self, expected_payload):
         """ Returns whether correct payload is attached to a log.
-            Note: Most JSON payloads are surrounded by "". If
-                    escape_chars is True such that the expected_payload is
-                    surrounded with "".
         """
-        if escape_chars:
-            expected_payload = ''.join(['"', expected_payload, '"'])
+        # Note: This is the raw payload that will be pickled by the
+        # reporter.
+        actual_payload = self.mock_reporter.spans[0].logs[0].payload_json
 
-        if actual_payload is None:
-            actual_payload = self.mock_reporter.spans[0].logs[0].payload_json
-
-        sorted_exp = json.dumps(json.loads(expected_payload), sort_keys=True)
-        sorted_act = json.dumps(json.loads(actual_payload), sort_keys=True)
+        sorted_exp = jsonpickle.encode(jsonpickle.decode(expected_payload))
+        sorted_act = jsonpickle.encode(actual_payload, unpicklable=False, make_refs=False)
         self.assertEqual(sorted_act, sorted_exp)
 
     def check_spans(self, spans):

@@ -15,7 +15,6 @@ import traceback
 import urllib
 import warnings
 
-import jsonpickle
 import opentracing
 
 from .crouton import ttypes

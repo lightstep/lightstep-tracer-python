@@ -3,6 +3,7 @@
 
 import atexit
 import contextlib
+import jsonpickle
 import random
 from socket import error as socket_error
 import ssl
