@@ -28,6 +28,7 @@ import opentracing
 import lightstep.tracer
 
 opentracing.tracer = lightstep.tracer.init_tracer(
+    group_name='your_process_type',
     access_token='{your_access_token}')
 ```
 
