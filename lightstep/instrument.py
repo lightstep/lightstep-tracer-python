@@ -34,7 +34,7 @@ class Runtime(object):
         purposes only
     """
     def __init__(self,
-                 group_name='',
+                 group_name=None,
                  access_token='',
                  secure=True,
                  service_host="collector.lightstep.com",
@@ -51,6 +51,9 @@ class Runtime(object):
         if certificate_verification is False:
             warnings.warn('SSL CERTIFICATE VERIFICATION turned off. ALL FUTURE HTTPS calls will be unverified.')
             ssl._create_default_https_context = ssl._create_unverified_context
+
+        if group_name is None:
+            group_name = sys.argv[0]
 
         # Thrift runtime configuration
         guid = util._generate_guid()
