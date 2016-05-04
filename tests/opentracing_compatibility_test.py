@@ -5,7 +5,9 @@ from opentracing.harness.api_check import APICompatibilityCheckMixin
 
 import lightstep.tracer
 
-# LightStep intentionally does not support the binary protocol at the moment.
+# The binary carrier is not yet implemented in LightStep. Disable this OpenTracing
+# test until it is (otherwise it makes it far more difficult to detect legitimate
+# regressions in the unit tests while this known failure exists).
 def test_alway_pass(self):
     return
 APICompatibilityCheckMixin.test_binary_propagation = test_alway_pass
