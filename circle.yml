@@ -1,6 +1,12 @@
 machine:
     python:
         version: 2.7.10
+# The 'override' is needed to test multiple versions within tox
+# See https://github.com/samstav/circleci-python-sandbox/issues/1#issuecomment-142641082
+dependencies:
+    override:
+        - pip install tox tox-pyenv
+        - pyenv local 2.7.10 2.6.8
 test:
     override:
         - make test
