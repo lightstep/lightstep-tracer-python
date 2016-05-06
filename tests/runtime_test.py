@@ -428,6 +428,28 @@ class RuntimeTest(unittest.TestCase):
         self.assertEqual(len(runtime._span_records), 88)
         self.assertTrue(runtime.flush(self.mock_connection))
 
+    def test_state_ids(self):
+        """
+        Test that core tracing ids are serialized properly.
+        """
+        tracer = self.create_test_tracer()
+        # Create a parent and child span and finish each (via with).
+        with tracer.start_span(operation_name='parent') as parent:
+            with tracer.start_span(operation_name='child', parent=parent) as child:
+                # Nothing to do; we're just checking id propagation.
+                pass
+
+        parent_span_record = self.mock_reporter.spans[1].span_record
+        child_span_record = self.mock_reporter.spans[0].span_record
+        self.assertEqual(parent_span_record.span_name, 'parent')
+        self.assertEqual(child_span_record.span_name, 'child')
+        self.assertEqual(child_span_record.trace_guid, parent_span_record.trace_guid)
+        parent_guid = None
+        for tagrec in child_span_record.attributes:
+            if tagrec.Key == "parent_span_guid":
+                parent_guid = tagrec.Value
+        self.assertEqual(parent_guid, parent_span_record.span_guid)
+
     # ------
     # HELPER
     # ------

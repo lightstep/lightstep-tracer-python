@@ -65,8 +65,8 @@ class Span(opentracing.Span):
             self.span_guid = util._generate_guid()
             self.baggage = {}
         else:
-            self.trace_guid = parent.trace_guid
-            self.parent_guid = parent.span_guid
+            self.trace_guid = str(parent.trace_guid)
+            self.parent_guid = str(parent.span_guid)
             self.span_guid = util._generate_guid()
             self.baggage = copy.deepcopy(parent.baggage)
 
@@ -78,6 +78,7 @@ class Span(opentracing.Span):
 
         # Thrift is picky about the types being right, so be explicit here
         self.span_record = ttypes.SpanRecord(
+            trace_guid=str(self.trace_guid),
             span_guid=str(self.span_guid),
             runtime_guid=str(tracer._runtime_guid),
             span_name=str(operation_name),
@@ -85,7 +86,8 @@ class Span(opentracing.Span):
             oldest_micros=long(oldest_micros),
             attributes=[],
         )
-        self._set_join_id('trace_guid', self.trace_guid)
+        if self.parent_guid:
+            self.set_tag("parent_span_guid", self.parent_guid)
         if tags:
             for k, v in tags.iteritems():
                 self.set_tag(k, v)
