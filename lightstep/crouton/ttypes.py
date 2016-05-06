@@ -596,6 +596,7 @@ class SpanRecord:
   """
   Attributes:
    - span_guid
+   - trace_guid
    - runtime_guid
    - span_name
    - join_ids
@@ -618,10 +619,12 @@ class SpanRecord:
     (8, TType.LIST, 'attributes', (TType.STRUCT,(KeyValue, KeyValue.thrift_spec)), None, ), # 8
     (9, TType.BOOL, 'error_flag', None, None, ), # 9
     (10, TType.LIST, 'log_records', (TType.STRUCT,(LogRecord, LogRecord.thrift_spec)), None, ), # 10
+    (11, TType.STRING, 'trace_guid', None, None, ), # 11
   )
 
-  def __init__(self, span_guid=None, runtime_guid=None, span_name=None, join_ids=None, oldest_micros=None, youngest_micros=None, attributes=None, error_flag=None, log_records=None,):
+  def __init__(self, span_guid=None, trace_guid=None, runtime_guid=None, span_name=None, join_ids=None, oldest_micros=None, youngest_micros=None, attributes=None, error_flag=None, log_records=None,):
     self.span_guid = span_guid
+    self.trace_guid = trace_guid
     self.runtime_guid = runtime_guid
     self.span_name = span_name
     self.join_ids = join_ids
@@ -643,6 +646,11 @@ class SpanRecord:
       if fid == 1:
         if ftype == TType.STRING:
           self.span_guid = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 11:
+        if ftype == TType.STRING:
+          self.trace_guid = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 2:
@@ -758,6 +766,10 @@ class SpanRecord:
         iter34.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
+    if self.trace_guid is not None:
+      oprot.writeFieldBegin('trace_guid', TType.STRING, 11)
+      oprot.writeString(self.trace_guid)
+      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -768,6 +780,7 @@ class SpanRecord:
   def __hash__(self):
     value = 17
     value = (value * 31) ^ hash(self.span_guid)
+    value = (value * 31) ^ hash(self.trace_guid)
     value = (value * 31) ^ hash(self.runtime_guid)
     value = (value * 31) ^ hash(self.span_name)
     value = (value * 31) ^ hash(self.join_ids)
