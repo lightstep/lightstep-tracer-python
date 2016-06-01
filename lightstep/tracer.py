@@ -51,7 +51,7 @@ def init_debug_tracer():
     LightStep."""
     return Tracer(reporter_module.LoggingReporter())
 
-class Span(opentracing.Span):
+class Span(opentracing.Span3):
     """A LightStep implementation of opentracing.Span."""
 
     def __init__(self, operation_name, tracer, parent=None, tags=None, start_time=None):
@@ -222,7 +222,7 @@ class Tracer(object):
             decoded_baggage = {}
             for k in carrier:
                 if k.lower().startswith(_BAGGAGE_PREFIX):
-                    decoded_baggage[k.lower()[_BAGGAGE_PREFIX_LEN:]] = urllib.unquote(carrier.baggage[k])
+                    decoded_baggage[k.lower()[_BAGGAGE_PREFIX_LEN:]] = urllib.unquote(carrier[k]) 
             duck_parent = type('', (), {
                 'trace_guid': carrier[_TRACER_STATE_PREFIX + _FIELD_NAME_TRACE_GUID],
                 'span_guid': carrier[_TRACER_STATE_PREFIX + _FIELD_NAME_SPAN_GUID],

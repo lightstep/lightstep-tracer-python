@@ -7,6 +7,10 @@ import time
 
 import opentracing
 
+import sys
+import os
+sys.path.append('/Users/hugozul/lightstep-tracer-python')
+
 import lightstep.tracer
 
 def sleep_dot():
