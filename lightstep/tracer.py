@@ -51,7 +51,8 @@ def init_debug_tracer():
     LightStep."""
     return Tracer(reporter_module.LoggingReporter())
 
-class Span(opentracing.Span3):
+class Span(opentracing.Span):
+
     """A LightStep implementation of opentracing.Span."""
 
     def __init__(self, operation_name, tracer, parent=None, tags=None, start_time=None):

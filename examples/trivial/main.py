@@ -7,11 +7,11 @@ import time
 
 import opentracing
 
-import sys
-import os
-sys.path.append('/Users/hugozul/lightstep-tracer-python')
-
 import lightstep.tracer
+
+opentracing.tracer = lightstep.tracer.init_tracer(
+    group_name='your_process_type',
+    access_token='{38500368f614ded2704772cdba398f4b}')
 
 def sleep_dot():
     """Short sleep and writes a dot to the STDOUT.
