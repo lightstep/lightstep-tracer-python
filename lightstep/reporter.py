@@ -38,7 +38,7 @@ class LightStepReporter(object):
         self.runtime = instrument.Runtime(*args, **kwargs)
         self._runtime_guid = self.runtime._runtime.guid
 
-    def report_span(self, span):
+    def record_span(self, span):
         self.runtime._add_span(span.span_record)
         for log in span.logs:
             self.runtime._add_log(log)
@@ -46,6 +46,7 @@ class LightStepReporter(object):
     def flush(self):
         self.runtime.flush()
         return True
+
 
 class MockReporter(object):
     """MockReporter is used to debug and test Tracer."""

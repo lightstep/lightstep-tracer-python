@@ -2,7 +2,7 @@
 """
 import random
 import time
-from . import constants
+import constants
 
 guid_rng = random.Random()   # Uses urandom seed
 
@@ -47,3 +47,8 @@ def _merge_dicts(*dict_args):
         if dictionary:
             result.update(dictionary)
     return result if result else None
+
+#######################
+
+def generate_id():
+    return guid_rng.getrandbits(64) - 1

@@ -1,0 +1,17 @@
+Metadata-Version: 1.1
+Name: opentracing
+Version: 1.0rc3
+Summary: OpenTracing API for Python. See documentation at http://opentracing.io
+Home-page: https://github.com/opentracing/opentracing-python
+Author: Yuri Shkuro, The OpenTracing Authors
+Author-email: shkuro@gmail.com
+License: MIT
+Description: UNKNOWN
+Keywords: opentracing
+Platform: any
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

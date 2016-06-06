@@ -189,8 +189,8 @@ class Runtime(object):
             self._log_records = []
 
         for log in report.log_records:
-            if log.stable_name is not None:
-                log.stable_name = str(log.stable_name)
+            # if log.event is not None:
+            #     log.event = str(log.event)
             if log.payload_json is not None:
                 try:
                     log.payload_json = \

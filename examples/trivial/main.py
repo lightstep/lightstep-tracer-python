@@ -85,7 +85,9 @@ if __name__ == '__main__':
 
     # Use LightStep's debug tracer, which logs to the console instead of
     # reporting to LightStep.
+
     opentracing.tracer = lightstep.tracer.init_debug_tracer()
+    
     try:
         add_spans()
     finally:
@@ -99,3 +101,4 @@ if __name__ == '__main__':
         opentracing.tracer.flush()
 
     print 'World!'
+
