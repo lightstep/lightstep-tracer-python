@@ -48,7 +48,5 @@ def _merge_dicts(*dict_args):
             result.update(dictionary)
     return result if result else None
 
-#######################
-
 def generate_id():
     return guid_rng.getrandbits(64) - 1
