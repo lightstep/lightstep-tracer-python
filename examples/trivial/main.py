@@ -36,6 +36,7 @@ def add_spans():
             # where they're intended to be used.
             text_carrier = {}
             opentracing.tracer.inject(child_span, opentracing.Format.TEXT_MAP, text_carrier)
+
             with opentracing.tracer.join(
                     'trivia/remote_span',
                     opentracing.Format.TEXT_MAP,
@@ -45,6 +46,36 @@ def add_spans():
                 sleep_dot()
 
 
+
+def add_spans_withLightStep():
+    """Same implementation as add_spans() except uses LightStep-specific code"""
+    with tracer.start_span(operation_name='trivial/initial_request') as parent_span:
+        parent_span.set_tag('url', 'localhost')
+        sleep_dot()
+        parent_span.log_event('All good here!', payload={'N': 42, 'pi': 3.14, 'abc': 'xyz'})
+        parent_span.set_tag('span_type', 'parent')
+        parent_span.set_baggage_item('checked', 'baggage')
+        sleep_dot()
+
+        # This is how you would represent starting work locally.
+        with tracer.start_span(operation_name='trivial/child_request', parent=parent_span) as child_span:
+            child_span.log_event('Uh Oh!', payload={'error': True})
+            child_span.set_tag('span_type', 'child')
+            sleep_dot()
+
+            # Play with the propagation APIs... this is not IPC and thus not
+            # where they're intended to be used.
+            text_carrier = {}
+            tracer.inject(child_span, 'text_map', text_carrier)
+
+            with tracer.join(
+                    'trivia/remote_span',
+                    'text_map',
+                    text_carrier) as remote_span:
+                print remote_span
+                remote_span.log_event('Remote!')
+                remote_span.set_tag('span_type', 'remote')
+                sleep_dot()
 
 def lightstep_tracer_from_args():
     """Initializes lightstep from the commandline args.
@@ -80,25 +111,25 @@ if __name__ == '__main__':
     print 'Hello '
 
     # Use opentracing's default no-op implementation
-    opentracing.tracer = opentracing.Tracer()
-    add_spans()
+    # opentracing.tracer = opentracing.Tracer()
+    # add_spans()
 
     # Use LightStep's debug tracer, which logs to the console instead of
     # reporting to LightStep.
 
-    opentracing.tracer = lightstep.tracer.init_debug_tracer()
+    # tracer = lightstep.tracer.init_debug_tracer()
     
-    try:
-        add_spans()
-    finally:
-        opentracing.tracer.flush()
+    # try:
+    #     add_spans_withLightStep()
+    # finally:
+    #     print tracer.flush()
 
-    # Use LightStep's opentracing implementation
-    opentracing.tracer = lightstep_tracer_from_args()
+    #Use LightStep's opentracing implementation
+    tracer = lightstep_tracer_from_args()
     try:
-        add_spans()
+        add_spans_withLightStep()
     finally:
-        opentracing.tracer.flush()
+        print tracer.flush()
 
     print 'World!'
 
