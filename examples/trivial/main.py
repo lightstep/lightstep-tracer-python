@@ -72,7 +72,6 @@ def add_spans_withLightStep():
                     'trivia/remote_span',
                     'text_map',
                     text_carrier) as remote_span:
-                print remote_span
                 remote_span.log_event('Remote!')
                 remote_span.set_tag('span_type', 'remote')
                 sleep_dot()
@@ -111,25 +110,25 @@ if __name__ == '__main__':
     print 'Hello '
 
     # Use opentracing's default no-op implementation
-    # opentracing.tracer = opentracing.Tracer()
-    # add_spans()
+    opentracing.tracer = opentracing.Tracer()
+    add_spans()
 
     # Use LightStep's debug tracer, which logs to the console instead of
     # reporting to LightStep.
 
-    # tracer = lightstep.tracer.init_debug_tracer()
+    tracer = lightstep.tracer.init_debug_tracer()
     
-    # try:
-    #     add_spans_withLightStep()
-    # finally:
-    #     print tracer.flush()
+    try:
+        add_spans_withLightStep()
+    finally:
+        tracer.flush()
 
     #Use LightStep's opentracing implementation
     tracer = lightstep_tracer_from_args()
     try:
         add_spans_withLightStep()
     finally:
-        print tracer.flush()
+        tracer.flush()
 
     print 'World!'
 

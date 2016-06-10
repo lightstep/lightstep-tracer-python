@@ -67,14 +67,25 @@ class LoggingRecorder(SpanRecorder):
         span_record = ttypes.SpanRecord(
             trace_guid=str(span.context.trace_id),
             span_guid=str(span.context.span_id),
-            runtime_guid=str(span._tracer._runtime_guid),
+            runtime_guid=str(span._tracer.recorder._runtime_guid),
             span_name=str(span.operation_name),
             join_ids=[],
             oldest_micros=long(span.start_time),
             youngest_micros = long(now_micros),
             attributes=[],
         ) 
-        logging.warn('Reporting span %s \n with logs %s', pprint.pformat(vars(span_record)), _pretty_logs(span.logs))
+        
+        logs = []
+        for log in span.logs:
+            event = ""
+            if len(log.event)>0:
+                #Don't allow for arbitrarily long log messages.
+                if sys.getsizeof(log.event)>constants.flagMaxLogMessageLen:
+                    event = log.event[:constants.maxLenofLogMessage]
+                else:
+                    event = log.event
+            logs.append(ttypes.LogRecord(stable_name= event, payload_json= log.payload))
+        logging.warn('Reporting span %s \n with logs %s', pprint.pformat(vars(span_record)), _pretty_logs(logs))
 
     def flush(self):
         return True

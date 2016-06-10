@@ -21,7 +21,7 @@ import os
 
 import opentracing
 
-from .basictracer.tracer import BasicTracer
+from .basictracer import BasicTracer
 
 from .recorder import Recorder, LoggingRecorder
 from .util import generate_id, _now_micros
