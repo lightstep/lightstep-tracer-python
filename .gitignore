@@ -1,3 +1,4 @@
+activate/*
 docs/_build/*
 build/*
 lightstep.egg-info/*
