@@ -189,8 +189,6 @@ class Runtime(object):
             self._log_records = []
 
         for log in report.log_records:
-            # if log.event is not None:
-            #     log.event = str(log.event)
             if log.payload_json is not None:
                 try:
                     log.payload_json = \
@@ -200,7 +198,6 @@ class Runtime(object):
                                                          max_depth=constants.JSON_MAX_DEPTH)
                 except:
                     log.payload_json = jsonpickle.encode(constants.JSON_FAIL)
-                
         return report
 
     def _add_log(self, log):
@@ -232,6 +229,8 @@ class Runtime(object):
                 self._span_records[delete_index] = span
             else:
                 self._span_records.append(span)
+
+
 
     def _store_on_disconnect(self, report_request):
         """Store logs and the spans from a report request in the runtime's
