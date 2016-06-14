@@ -117,16 +117,17 @@ if __name__ == '__main__':
     # reporting to LightStep.
 
     tracer = lightstep.tracer.init_debug_tracer()
+    opentracing.tracer = tracer
     
     try:
-        add_spans_withLightStep()
+        add_spans()
     finally:
         tracer.flush()
 
     #Use LightStep's opentracing implementation
     tracer = lightstep_tracer_from_args()
     try:
-        add_spans_withLightStep()
+        add_spans()
     finally:
         tracer.flush()
 

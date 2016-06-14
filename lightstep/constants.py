@@ -26,5 +26,5 @@ JSON_WARNING = True
 SECONDS_TO_MICRO = 1000000
 
 # Recorder constants
-flagMaxLogMessageLen = 1024
-maxLenofLogMessage = 984
+MAX_LOG_MESSAGE_LEN = 1024
+LONGEST_POSSIBLE_SUB_LOG = 984
