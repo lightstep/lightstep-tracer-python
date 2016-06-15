@@ -29,38 +29,7 @@ class Recorder(SpanRecorder):
         self._runtime_guid = self.runtime._runtime.guid
 
     def record_span(self, span):
-        now_micros = util._now_micros()
-        
-        spanRecord = ttypes.SpanRecord(
-            trace_guid=str(span.context.trace_id),
-            span_guid=str(span.context.span_id),
-            runtime_guid=str(span._tracer.recorder._runtime_guid),
-            span_name=str(span.operation_name),
-            join_ids=[],
-            oldest_micros=long(span.start_time),
-            youngest_micros = long(now_micros),
-            attributes=[],
-            log_records=[]
-        )
-
-        for key in span.tags:
-            if key[:5] == "join:":
-                spanRecord.join_ids.append(ttypes.TraceJoinId(key, span.tags[key]))
-            else:
-                spanRecord.attributes.append(ttypes.KeyValue(key, span.tags[key]))
-
-        for log in span.logs:
-            event = ""
-            if len(log.event)>0:
-                #Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(log.event)>constants.MAX_LOG_MEMORY:
-                    event = log.event[:constants.MAX_LOG_LEN]
-                else:
-                    event = log.event
-            spanRecord.log_records.append(ttypes.LogRecord(stable_name= event, payload_json= str(log.payload)))
-
-        self.runtime
-        self.runtime._add_span(spanRecord)
+        self.runtime._add_span(span)
 
     def flush(self):
         self.runtime.flush()
@@ -271,6 +240,7 @@ class Runtime(object):
         with self._mutex:
             report = ttypes.ReportRequest(self._runtime, self._span_records,
                                           self._log_records)
+            #print "REPORT: ", report
             self._span_records = []
             self._log_records = []
 
@@ -306,15 +276,46 @@ class Runtime(object):
 
         Will delete a previously-added span if the limit has been reached.
         """
+        now_micros = util._now_micros()
+        
+        spanRecord = ttypes.SpanRecord(
+            trace_guid=str(span.context.trace_id),
+            span_guid=str(span.context.span_id),
+            runtime_guid=str(span._tracer.recorder._runtime_guid),
+            span_name=str(span.operation_name),
+            join_ids=[],
+            oldest_micros=long(span.start_time),
+            youngest_micros = long(now_micros),
+            attributes=[],
+            log_records=[]
+        )
+
+        for key in span.tags:
+            if key[:5] == "join:":
+                spanRecord.join_ids.append(ttypes.TraceJoinId(key, span.tags[key]))
+            else:
+                spanRecord.attributes.append(ttypes.KeyValue(key, span.tags[key]))
+
+        for log in span.logs:
+            event = ""
+            if len(log.event)>0:
+                #Don't allow for arbitrarily long log messages.
+                if sys.getsizeof(log.event)>constants.MAX_LOG_MEMORY:
+                    event = log.event[:constants.MAX_LOG_LEN]
+                else:
+                    event = log.event
+            spanRecord.log_records.append(ttypes.LogRecord(stable_name= event, payload_json= str(log.payload)))
+
+
         if self._disabled_runtime:
             return
         with self._mutex:
             current_len = len(self._span_records)
             if len(self._span_records) >= self._max_span_records:
                 delete_index = random.randint(0, current_len - 1)
-                self._span_records[delete_index] = span
+                self._span_records[delete_index] = spanRecord
             else:
-                self._span_records.append(span)
+                self._span_records.append(spanRecord)
 
 
 
