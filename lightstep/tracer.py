@@ -24,7 +24,7 @@ import opentracing
 from .basictracer import BasicTracer
 
 from .recorder import Recorder, LoggingRecorder
-from .util import generate_id, _now_micros
+
 
 
 _TRACER_STATE_PREFIX = "ot-tracer-"

@@ -36,27 +36,18 @@ class Recorder(SpanRecorder):
 
 def _pretty_logs(logs):
     return ''.join(['\n  ' + pprint.pformat(log) for log in logs])
+def _pretty_span(span):
+    span = {'trace_guid': span.context.trace_id, 'span_guid':span.context.span_id, 'runtime_guid':span._tracer.recorder._runtime_guid,
+     'span_name':span.operation_name, 'oldest_micros':span.start_time, 'youngest_micros':util._now_micros()}
+    return ''.join(['\n ' + attr + ": " + str(span[attr]) for attr in span])
 
 class LoggingRecorder(SpanRecorder):
 
     """Logs all spans to console."""
-
     def __init__(self, *args, **kwargs):
         self._runtime_guid = util._generate_guid()
 
     def record_span(self,span):
-        now_micros = util._now_micros()
-        span_record = ttypes.SpanRecord(
-            trace_guid=str(span.context.trace_id),
-            span_guid=str(span.context.span_id),
-            runtime_guid=str(span._tracer.recorder._runtime_guid),
-            span_name=str(span.operation_name),
-            join_ids=[],
-            oldest_micros=long(span.start_time),
-            youngest_micros = long(now_micros),
-            attributes=[],
-        ) 
-        
         logs = []
         for log in span.logs:
             event = ""
@@ -67,7 +58,7 @@ class LoggingRecorder(SpanRecorder):
                 else:
                     event = log.event
             logs.append(ttypes.LogRecord(stable_name= event, payload_json= log.payload))
-        logging.warn('Reporting span %s \n with logs %s', pprint.pformat(vars(span_record)), _pretty_logs(logs))
+        logging.warn('Reporting span %s \n with logs %s', _pretty_span(span), _pretty_logs(logs))
 
     def flush(self):
         return True
@@ -239,21 +230,20 @@ class Runtime(object):
         report = None
         with self._mutex:
             report = ttypes.ReportRequest(self._runtime, self._span_records,
-                                          self._log_records)
-            #print "REPORT: ", report
+                                          None)
             self._span_records = []
             self._log_records = []
-
-        for log in report.log_records:
-            if log.payload_json is not None:
-                try:
-                    log.payload_json = \
-                                       jsonpickle.encode(log.payload_json,
-                                                         unpicklable=False,
-                                                         make_refs=False,
-                                                         max_depth=constants.JSON_MAX_DEPTH)
-                except:
-                    log.payload_json = jsonpickle.encode(constants.JSON_FAIL)
+        for span in report.span_records:
+            for log in span.log_records:
+                if log.payload_json is not None:
+                    try:
+                        log.payload_json = \
+                                           jsonpickle.encode(log.payload_json,
+                                                             unpicklable=False,
+                                                             make_refs=False,
+                                                             max_depth=constants.JSON_MAX_DEPTH)
+                    except:
+                        log.payload_json = jsonpickle.encode(constants.JSON_FAIL)
         return report
 
     def _add_log(self, log):
@@ -278,7 +268,7 @@ class Runtime(object):
         """
         now_micros = util._now_micros()
         
-        spanRecord = ttypes.SpanRecord(
+        span_record = ttypes.SpanRecord(
             trace_guid=str(span.context.trace_id),
             span_guid=str(span.context.span_id),
             runtime_guid=str(span._tracer.recorder._runtime_guid),
@@ -291,10 +281,10 @@ class Runtime(object):
         )
 
         for key in span.tags:
-            if key[:5] == "join:":
-                spanRecord.join_ids.append(ttypes.TraceJoinId(key, span.tags[key]))
+            if key[:len(constants.JOIN_ID_TAG_PREFIX)] == constants.JOIN_ID_TAG_PREFIX:
+                span_record.join_ids.append(ttypes.TraceJoinId(key, span.tags[key]))
             else:
-                spanRecord.attributes.append(ttypes.KeyValue(key, span.tags[key]))
+                span_record.attributes.append(ttypes.KeyValue(key, span.tags[key]))
 
         for log in span.logs:
             event = ""
@@ -304,7 +294,7 @@ class Runtime(object):
                     event = log.event[:constants.MAX_LOG_LEN]
                 else:
                     event = log.event
-            spanRecord.log_records.append(ttypes.LogRecord(stable_name= event, payload_json= str(log.payload)))
+            span_record.log_records.append(ttypes.LogRecord(stable_name= event, payload_json= log.payload))
 
 
         if self._disabled_runtime:
@@ -313,9 +303,9 @@ class Runtime(object):
             current_len = len(self._span_records)
             if len(self._span_records) >= self._max_span_records:
                 delete_index = random.randint(0, current_len - 1)
-                self._span_records[delete_index] = spanRecord
+                self._span_records[delete_index] = span_record
             else:
-                self._span_records.append(spanRecord)
+                self._span_records.append(span_record)
 
 
 
