@@ -93,7 +93,7 @@ if __name__ == '__main__':
     finally:
         tracer.flush()
 
-    #Use LightStep's opentracing implementation
+    # Use LightStep's opentracing implementation
     tracer = lightstep_tracer_from_args()
     try:
         add_spans()

@@ -53,12 +53,13 @@ class Recorder(SpanRecorder):
             event = ""
             if len(log.event)>0:
                 #Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(log.event)>constants.MAX_LOG_MESSAGE_LEN:
-                    event = log.event[:constants.LONGEST_POSSIBLE_SUB_LOG]
+                if sys.getsizeof(log.event)>constants.MAX_LOG_MEMORY:
+                    event = log.event[:constants.MAX_LOG_LEN]
                 else:
                     event = log.event
             spanRecord.log_records.append(ttypes.LogRecord(stable_name= event, payload_json= str(log.payload)))
 
+        self.runtime
         self.runtime._add_span(spanRecord)
 
     def flush(self):
@@ -92,8 +93,8 @@ class LoggingRecorder(SpanRecorder):
             event = ""
             if len(log.event)>0:
                 #Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(log.event)>constants.MAX_LOG_MESSAGE_LEN:
-                    event = log.event[:constants.LONGEST_POSSIBLE_SUB_LOG]
+                if sys.getsizeof(log.event)>constants.MAX_LOG_MEMORY:
+                    event = log.event[:constants.MAX_LOG_LEN]
                 else:
                     event = log.event
             logs.append(ttypes.LogRecord(stable_name= event, payload_json= log.payload))
