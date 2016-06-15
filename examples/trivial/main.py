@@ -79,8 +79,8 @@ if __name__ == '__main__':
     print 'Hello '
 
     # Use opentracing's default no-op implementation
-    opentracing.tracer = opentracing.Tracer()
-    add_spans()
+    # opentracing.tracer = opentracing.Tracer()
+    # add_spans()
 
     # Use LightStep's debug tracer, which logs to the console instead of
     # reporting to LightStep.
@@ -95,6 +95,8 @@ if __name__ == '__main__':
 
     # Use LightStep's opentracing implementation
     tracer = lightstep_tracer_from_args()
+    opentracing.tracer = tracer
+    
     try:
         add_spans()
     finally:
