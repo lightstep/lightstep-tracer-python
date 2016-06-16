@@ -72,7 +72,6 @@ class Runtime(object):
     :param bool secure: whether HTTP connection is secure
     :param str service_host: Service host name
     :param int service_port: Service port number
-    :param int max_log_records: Maximum number of log records to buffer
     :param int max_span_records: Maximum number of spans records to buffer
     :param bool certificate_verification: if False, will ignore SSL
         certification verification (in ALL HTTPS calls, not just in this
@@ -85,7 +84,6 @@ class Runtime(object):
                  secure=True,
                  service_host="collector.lightstep.com",
                  service_port=443,
-                 max_log_records=constants.DEFAULT_MAX_LOG_RECORDS,
                  max_span_records=constants.DEFAULT_MAX_SPAN_RECORDS,
                  certificate_verification=True,
                  periodic_flush_seconds=constants.FLUSH_PERIOD_SECS):
@@ -119,13 +117,8 @@ class Runtime(object):
                                                             service_port)
         self._auth = ttypes.Auth(access_token)
         self._mutex = threading.Lock()
-        self._log_records, self._span_records = ([] for i in range(2))
-
-        self._max_log_records = max_log_records
+        self._span_records = []
         self._max_span_records = max_span_records
-
-        if self._max_log_records <= 0:
-            raise Exception()
 
         self._disabled_runtime = False
         atexit.register(self.shutdown)
@@ -210,7 +203,7 @@ class Runtime(object):
         """Use the given connection to transmit the current logs and spans as a
         report request."""
         if not connection.ready:
-            return False
+            return
 
         report_request = self._construct_report_request()
         try:
@@ -219,11 +212,11 @@ class Runtime(object):
                 for command in resp.commands:
                     if command.disable:
                         self.shutdown(flush=False)
-            return True
+            return
 
         except (Thrift.TException, socket_error):
-            self._store_on_disconnect(report_request)
-            return False
+            # TODO: re-enqueue the spans
+           pass
 
     def _construct_report_request(self):
         """Construct a report request."""
@@ -232,9 +225,9 @@ class Runtime(object):
             report = ttypes.ReportRequest(self._runtime, self._span_records,
                                           None)
             self._span_records = []
-            self._log_records = []
         for span in report.span_records:
             for log in span.log_records:
+                index = span.log_records.index(log)
                 if log.payload_json is not None:
                     try:
                         log.payload_json = \
@@ -244,22 +237,8 @@ class Runtime(object):
                                                              max_depth=constants.JSON_MAX_DEPTH)
                     except:
                         log.payload_json = jsonpickle.encode(constants.JSON_FAIL)
+                span.log_records[index] = log
         return report
-
-    def _add_log(self, log):
-        """Safely add a log to the buffer.
-
-        Will delete a previously-added log if the limit has been reached.
-        """
-        if self._disabled_runtime:
-            return
-        with self._mutex:
-            current_len = len(self._log_records)
-            if current_len >= self._max_log_records:
-                delete_index = random.randint(0, current_len - 1)
-                self._log_records[delete_index] = log
-            else:
-                self._log_records.append(log)
 
     def _add_span(self, span):
         """Safely add a span to the buffer.
@@ -306,16 +285,4 @@ class Runtime(object):
                 self._span_records[delete_index] = span_record
             else:
                 self._span_records.append(span_record)
-
-
-
-    def _store_on_disconnect(self, report_request):
-        """Store logs and the spans from a report request in the runtime's
-        buffers."""
-        for log in report_request.log_records:
-            self._add_log(log)
-        for span in report_request.span_records:
-            self._add_span(span)
-        
-
         

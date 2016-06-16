@@ -3,7 +3,6 @@
 # Runtime constants
 FLUSH_THREAD_NAME = 'Flush Thread'
 FLUSH_PERIOD_SECS = 2.5
-DEFAULT_MAX_LOG_RECORDS = 1000
 DEFAULT_MAX_SPAN_RECORDS = 1000
 
 # Log Keywords
