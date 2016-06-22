@@ -58,7 +58,8 @@ class LoggingRecorder(SpanRecorder):
                 else:
                     event = log.event
             logs.append(ttypes.LogRecord(stable_name= event, payload_json= log.payload))
-        logging.warn('Reporting span %s \n with logs %s', _pretty_span(span), _pretty_logs(logs))
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug('Reporting span %s \n with logs %s', _pretty_span(span), _pretty_logs(logs))
 
     def flush(self):
         return True
