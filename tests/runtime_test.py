@@ -5,7 +5,7 @@ import warnings
 import jsonpickle
 
 import lightstep.constants
-import lightstep.reporter
+import lightstep.recorder
 import lightstep.tracer
 import lightstep.instrument
 from lightstep.crouton import ttypes
@@ -269,25 +269,6 @@ class RuntimeTest(unittest.TestCase):
         self._check_span_payload({'A': 123, 'B' :d}, '{"A": 123, "B": {"one": 1, "three": 3, "two": 2}}')
         self._check_span_payload({'A': set([1, 2, 2])}, '{"A":[1,2]}')
 
-    # def test_readme_example(self):
-    #     # Artificial data for the example
-    #     self.mock_connection.clear()
-    #     runtime = self.create_test_runtime()
-    #     span = runtime._add_span(ttypes.SpanRecord(span_name='test_span'))
-    #     eventName='post_shared'
-    #     eventCount=510
-    #     # Sigh: testing a one element set here since it's not trivial to ensure
-    #     # a deterministic order to the set's json encode -> decode roundtrip.
-    #     eventData={'post_title':'Ski Video', 'tags': set(['snow'])}
-
-    #     span.infof('Event type %s occurred %d times', eventName, eventCount, payload=eventData)
-
-    #     span.end()
-    #     self.assertTrue(runtime.flush(self.mock_connection))
-    #     recorded_payload = self.mock_connection.reports[0].log_records[0].payload_json
-    #     self.check_payload(recorded_payload, '{"arguments": ["post_shared", 510], "payload": {"post_title": "Ski Video", "tags": ["snow"]}}', False)
-
-
     def test_new_style_object_payload(self):
         self.log_payload(NewStyleDummyObject())
         self.check_payload('{"bool_payload": true, "char_payload": "a", '
@@ -340,42 +321,6 @@ class RuntimeTest(unittest.TestCase):
         self.assertEqual(log.level, 'I')
         #self.check_payload(log.payload_json, '{"arguments": ["John", "Smith"], "payload": "Info"}')
         self.assertEqual(log.span_guid, span_record.span_guid)
-
-    # def test_span_warnf(self):
-    #     runtime = self.create_test_runtime()
-    #     span = runtime._add_span(ttypes.SpanRecord(span_name='Test Span Warnf')
-    #     span.warnf('Hi there %s %s', 'John', 'Smith', payload='Warn')
-    #     span.end()
-    #     self.assertTrue(runtime.flush(self.mock_connection))
-
-    #     report_span = self.mock_connection.reports[0].span_records[0]
-    #     self.assertTrue(report_span.span_name == 'Test Span Warnf',
-    #                     'Incorrect Span')
-
-    #     log = self.mock_connection.reports[0].log_records[0]
-    #     self.assertTrue(log.stable_name == 'Hi there John Smith',
-    #                     'Incorrect Log')
-    #     self.assertTrue(log.level == 'W', 'Incorrect Level')
-    #     self.check_payload(log.payload_json, '{"payload": "Warn", "arguments": ["John", "Smith"]}')
-    #     self.assertTrue(log.span_guid == report_span.span_guid)
-
-    # def test_span_errorf(self):
-    #     runtime = self.create_test_runtime()
-    #     span = runtime._add_span(ttypes.SpanRecord(span_name='Test Span Errorf')
-    #     span.errorf('Hi there %s %s', 'John', 'Smith', payload='Error')
-    #     span.end()
-    #     self.assertTrue(runtime.flush(self.mock_connection))
-
-    #     report_span = self.mock_connection.reports[0].span_records[0]
-    #     self.assertTrue(report_span.span_name == 'Test Span Errorf',
-    #                     'Incorrect Span')
-
-    #     log = self.mock_connection.reports[0].log_records[0]
-    #     self.assertTrue(log.stable_name == 'Hi there John Smith',
-    #                     'Incorrect Log')
-    #     self.assertTrue(log.level == 'E', 'Incorrect Level')
-    #     self.check_payload(log.payload_json, '{"arguments": ["John", "Smith"], "payload": "Error"}')
-    #     self.assertTrue(log.span_guid == report_span.span_guid)
 
     def test_span_as_context_manager(self):
         """ Tests that, within a span as a context manager, exceptions are logged and re-raised.
