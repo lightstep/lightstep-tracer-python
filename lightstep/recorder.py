@@ -278,11 +278,12 @@ class Runtime(object):
             log_records=[]
         )
 
-        for key in span.tags:
-            if key[:len(constants.JOIN_ID_TAG_PREFIX)] == constants.JOIN_ID_TAG_PREFIX:
-                span_record.join_ids.append(ttypes.TraceJoinId(key, span.tags[key]))
-            else:
-                span_record.attributes.append(ttypes.KeyValue(key, span.tags[key]))
+        if span.tags:
+            for key in span.tags:
+                if key[:len(constants.JOIN_ID_TAG_PREFIX)] == constants.JOIN_ID_TAG_PREFIX:
+                    span_record.join_ids.append(ttypes.TraceJoinId(key, span.tags[key]))
+                else:
+                    span_record.attributes.append(ttypes.KeyValue(key, span.tags[key]))
 
         for log in span.logs:
             event = ""

@@ -27,9 +27,15 @@ Or if your python code is already instrumented for OpenTracing, you can simply s
 import opentracing
 import lightstep.tracer
 
-opentracing.tracer = lightstep.tracer.init_tracer(
+if __name__ == "__main__":
+  opentracing.tracer = lightstep.tracer.init_tracer(
     group_name='your_process_type',
     access_token='{your_access_token}')
+
+  with opentracing.tracer.start_span('TestSpan') as span:
+    span.log_event('test message', payload={'life': 42})
+
+  opentracing.tracer.flush()
 ```
 
 ## License
