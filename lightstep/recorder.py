@@ -74,7 +74,10 @@ class LoggingRecorder(SpanRecorder):
                     event = log.event[:constants.MAX_LOG_LEN]
                 else:
                     event = log.event
-            logs.append(ttypes.LogRecord(stable_name=event, payload_json=log.payload))
+            logs.append(ttypes.LogRecord(
+                timestamp_micros=long(util._time_to_micros(log.timestamp)),
+                stable_name=event,
+                payload_json=log.payload))
         logging.warn('Reporting span %s \n with logs %s', _pretty_span(span), _pretty_logs(logs))
 
     def flush(self):
