@@ -9,7 +9,7 @@ build:
 
 lint:
 	pylint -r n --disable=invalid-name,global-statement,bare-except \
-		lightstep/instrument.py lightstep/constants.py lightstep/connection.py
+		lightstep/tracer.py lightstep/constants.py lightstep/recorder.py
 
 docs:
 	cd docs && make html
