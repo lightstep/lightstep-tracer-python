@@ -8,23 +8,9 @@ See the API definition for comments.
 """
 from __future__ import absolute_import
 
-
-import copy
-import json
-import threading
-import time
-import traceback
-import urllib
-import warnings
-import sys
-import os
-
-import opentracing
 from basictracer import BasicTracer
 
 from .recorder import Recorder, LoggingRecorder
-
-
 
 _TRACER_STATE_PREFIX = "ot-tracer-"
 _BAGGAGE_PREFIX = "ot-baggage-"

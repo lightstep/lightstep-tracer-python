@@ -1,15 +1,21 @@
-import util
-import logging
-import constants
-import pprint
-import sys
+"""
+LightStep's implementations of the basictracer Recorder API.
+
+https://github.com/opentracing/basictracer-python
+
+See the API definition for comments.
+"""
+
+from socket import error as socket_error
 
 import atexit
 import contextlib
 import jsonpickle
+import logging
+import pprint
 import random
-from socket import error as socket_error
 import ssl
+import sys
 import threading
 import time
 import warnings
@@ -18,25 +24,28 @@ from thrift import Thrift
 from basictracer.recorder import SpanRecorder
 
 from .crouton import ttypes
-from . import constants, version as cruntime_version, util, connection as conn #???
+from . import constants, version as cruntime_version, util, connection as conn
 
 
 class Recorder(SpanRecorder):
-    """ SpanRecorder's job is record and report a BasicSpan.
-    """
+    """Recorder records and reports a BasicSpan to LightStep."""
     def __init__(self, *args, **kwargs):
         self.runtime = Runtime(*args, **kwargs)
         self._runtime_guid = self.runtime._runtime.guid
 
     def record_span(self, span):
+        """Per BasicSpan.record_span"""
         self.runtime._add_span(span)
 
     def flush(self):
+        """Force a flush of buffered Span data to LightStep"""
         self.runtime.flush()
 
 def _pretty_logs(logs):
+    """A helper to format logs for console logging"""
     return ''.join(['\n  ' + pprint.pformat(log) for log in logs])
 def _pretty_span(span):
+    """A helper to format a span for console logging"""
     span = {
         'trace_guid': span.context.trace_id,
         'span_guid': span.context.span_id,
@@ -48,18 +57,20 @@ def _pretty_span(span):
     return ''.join(['\n ' + attr + ": " + str(span[attr]) for attr in span])
 
 class LoggingRecorder(SpanRecorder):
+    """LoggingRecorder prints all spans to stdout."""
 
-    """Logs all spans to console."""
     def __init__(self, *args, **kwargs):
         self._runtime_guid = util._generate_guid()
 
-    def record_span(self,span):
+    def record_span(self, span):
+        """Per BasicSpan.record_span"""
+
         logs = []
         for log in span.logs:
             event = ""
-            if len(log.event)>0:
+            if len(log.event) > 0:
                 # Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(log.event)>constants.MAX_LOG_MEMORY:
+                if sys.getsizeof(log.event) > constants.MAX_LOG_MEMORY:
                     event = log.event[:constants.MAX_LOG_LEN]
                 else:
                     event = log.event
@@ -67,10 +78,11 @@ class LoggingRecorder(SpanRecorder):
         logging.warn('Reporting span %s \n with logs %s', _pretty_span(span), _pretty_logs(logs))
 
     def flush(self):
-        return True
+        """A noop for LoggingRecorder"""
+        return
 
 class Runtime(object):
-    """Instances of Runtime are used to sends logs and spans to the server.
+    """Instances of Runtime send spans to the LightStep collector.
 
     :param str group_name: name identifying the type of service that is being
         tracked
@@ -222,7 +234,7 @@ class Runtime(object):
 
         except (Thrift.TException, socket_error):
             # TODO: re-enqueue the spans
-           pass
+            pass
 
     def _construct_report_request(self):
         """Construct a report request."""
@@ -271,9 +283,9 @@ class Runtime(object):
 
         for log in span.logs:
             event = ""
-            if len(log.event)>0:
+            if len(log.event) > 0:
                 # Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(log.event)>constants.MAX_LOG_MEMORY:
+                if sys.getsizeof(log.event) > constants.MAX_LOG_MEMORY:
                     event = log.event[:constants.MAX_LOG_LEN]
                 else:
                     event = log.event
@@ -292,4 +304,3 @@ class Runtime(object):
                 self._span_records[delete_index] = span_record
             else:
                 self._span_records.append(span_record)
-        
