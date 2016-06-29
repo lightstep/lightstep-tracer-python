@@ -20,8 +20,7 @@ import sys
 import os
 
 import opentracing
-
-from .basictracer import BasicTracer
+from basictracer import BasicTracer
 
 from .recorder import Recorder, LoggingRecorder
 

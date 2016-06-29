@@ -1,6 +1,3 @@
-from .basictracer.recorder import SpanRecorder
-from .crouton import ttypes
-
 import util
 import logging
 import constants
@@ -18,6 +15,9 @@ import time
 import warnings
 
 from thrift import Thrift
+from basictracer.recorder import SpanRecorder
+
+from .crouton import ttypes
 from . import constants, version as cruntime_version, util, connection as conn #???
 
 
@@ -37,8 +37,14 @@ class Recorder(SpanRecorder):
 def _pretty_logs(logs):
     return ''.join(['\n  ' + pprint.pformat(log) for log in logs])
 def _pretty_span(span):
-    span = {'trace_guid': span.context.trace_id, 'span_guid':span.context.span_id, 'runtime_guid':span._tracer.recorder._runtime_guid,
-     'span_name':span.operation_name, 'oldest_micros':span.start_time, 'youngest_micros':util._now_micros()}
+    span = {
+        'trace_guid': span.context.trace_id,
+        'span_guid': span.context.span_id,
+        'runtime_guid': span._tracer.recorder._runtime_guid,
+        'span_name': span.operation_name,
+        'oldest_micros': span.start_time,
+        'youngest_micros': util._now_micros(),
+    }
     return ''.join(['\n ' + attr + ": " + str(span[attr]) for attr in span])
 
 class LoggingRecorder(SpanRecorder):
@@ -52,12 +58,12 @@ class LoggingRecorder(SpanRecorder):
         for log in span.logs:
             event = ""
             if len(log.event)>0:
-                #Don't allow for arbitrarily long log messages.
+                # Don't allow for arbitrarily long log messages.
                 if sys.getsizeof(log.event)>constants.MAX_LOG_MEMORY:
                     event = log.event[:constants.MAX_LOG_LEN]
                 else:
                     event = log.event
-            logs.append(ttypes.LogRecord(stable_name= event, payload_json= log.payload))
+            logs.append(ttypes.LogRecord(stable_name=event, payload_json=log.payload))
         logging.warn('Reporting span %s \n with logs %s', _pretty_span(span), _pretty_logs(logs))
 
     def flush(self):
@@ -245,16 +251,14 @@ class Runtime(object):
 
         Will delete a previously-added span if the limit has been reached.
         """
-        now_micros = util._now_micros()
-        
         span_record = ttypes.SpanRecord(
             trace_guid=str(span.context.trace_id),
             span_guid=str(span.context.span_id),
             runtime_guid=str(span._tracer.recorder._runtime_guid),
             span_name=str(span.operation_name),
             join_ids=[],
-            oldest_micros=long(span.start_time),
-            youngest_micros = long(now_micros),
+            oldest_micros=long(util._time_to_micros(span.start_time)),
+            youngest_micros=long(util._time_to_micros(span.start_time + span.duration)),
             attributes=[],
             log_records=[]
         )
@@ -268,12 +272,15 @@ class Runtime(object):
         for log in span.logs:
             event = ""
             if len(log.event)>0:
-                #Don't allow for arbitrarily long log messages.
+                # Don't allow for arbitrarily long log messages.
                 if sys.getsizeof(log.event)>constants.MAX_LOG_MEMORY:
                     event = log.event[:constants.MAX_LOG_LEN]
                 else:
                     event = log.event
-            span_record.log_records.append(ttypes.LogRecord(stable_name= event, payload_json= log.payload))
+            span_record.log_records.append(ttypes.LogRecord(
+                timestamp_micros=long(util._time_to_micros(log.timestamp)),
+                stable_name=event,
+                payload_json=log.payload))
 
 
         if self._disabled_runtime:
