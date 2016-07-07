@@ -5,6 +5,9 @@ FLUSH_THREAD_NAME = 'Flush Thread'
 FLUSH_PERIOD_SECS = 2.5
 DEFAULT_MAX_SPAN_RECORDS = 1000
 
+# Reserved Span keys
+PARENT_SPAN_GUID = 'parent_span_guid'
+
 # Log Keywords
 PAYLOAD = 'payload'
 SPAN_GUID = 'span_guid'

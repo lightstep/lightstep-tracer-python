@@ -278,6 +278,9 @@ class Runtime(object):
             log_records=[]
         )
 
+        if span.parent_id != None:
+            span_record.attributes.append(
+                ttypes.KeyValue(constants.PARENT_SPAN_GUID, str(span.parent_id)))
         if span.tags:
             for key in span.tags:
                 if key[:len(constants.JOIN_ID_TAG_PREFIX)] == constants.JOIN_ID_TAG_PREFIX:
