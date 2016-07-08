@@ -1,8 +1,8 @@
 """Demonstrates a Trace distributed across multiple machines.
 
-A TraceContext's text representation is stored in the headers of an HTTP request.
+A SpanContext's text representation is stored in the headers of an HTTP request.
 
-Runs two threads, starts a Trace in the client and passes the TraceContext to the server.
+Runs two threads, starts a Trace in the client and passes the SpanContext to the server.
 """
 
 import argparse
@@ -35,40 +35,44 @@ class RemoteHandler(BaseHTTPRequestHandler):
             server_span.log_event('prepared response', self.path)
 
 
-def before_sending_request(request, parent_span):
-    """Context manager creates Span and encodes the span's TraceContext into request.
+def before_sending_request(request):
+    """Context manager creates Span and encodes the span's SpanContext into request.
     """
-    operation = 'Sending request'
-    span = opentracing.tracer.start_span(operation_name=operation, parent=parent_span)
+    span = opentracing.tracer.start_span('Sending request')
     span.set_tag('server.http.url', request.get_full_url())
     host = request.get_host()
     if host:
         span.set_tag(opentracing.ext.tags.PEER_HOST_IPV4, host)
 
     text_carrier = {}
-    span.tracer.inject(span, opentracing.Format.TEXT_MAP, text_carrier)
+    span.tracer.inject(span.context, opentracing.Format.TEXT_MAP, text_carrier)
     for k, v in text_carrier.iteritems():
         request.add_header(k, v)
     return span
 
 
 def before_answering_request(handler, tracer):
-    """Context manager creates a Span, using TraceContext encoded in handler if possible.
+    """Context manager creates a Span, using SpanContext encoded in handler if possible.
     """
     operation = 'handle_request:' + handler.path
     text_carrier = {}
     for k, v in handler.headers.items():
         text_carrier[k] = v
-    span = tracer.join(operation, opentracing.Format.TEXT_MAP, text_carrier)
+    extracted_context = tracer.extract(opentracing.Format.TEXT_MAP, text_carrier)
 
-    if span is None:
+    span = None
+    if extracted_context:
+        span = tracer.start_span(
+                operation_name=operation,
+                references=opentracing.ChildOf(extracted_context))
+    else:
         print 'ERROR: Context missing, starting new trace'
         global _exit_code
         _exit_code = errno.ENOMSG
         span = tracer.start_span(operation_name=operation)
         headers = ', '.join({k + '=' + v for k, v in handler.headers.items()})
-        span.log_event('join_failed', headers)
-        print 'Could not join trace from http headers: ' + headers
+        span.log_event('extract_failed', headers)
+        print 'Could not extract context from http headers: ' + headers
 
     host, port = handler.client_address
     if host:
@@ -124,8 +128,7 @@ if __name__ == '__main__':
     global _exit_code
     _exit_code = 0
 
-    #Create a web server and define the handler to manage the
-    #incoming request
+    # Create a web server and define the handler to manage the incoming request
     port_number = pick_unused_port()
     server = HTTPServer(('', port_number), RemoteHandler)
 
@@ -138,9 +141,7 @@ if __name__ == '__main__':
         # Prepare request in the client
         url = 'http://localhost:{}'.format(port_number)
         request = urllib2.Request(url)
-        with before_sending_request(request=request,
-                                    parent_span=None) as client_span:
-
+        with before_sending_request(request) as client_span:
             client_span.log_event('sending request', url)
 
             # Send request to server

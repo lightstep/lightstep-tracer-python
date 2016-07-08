@@ -8,9 +8,9 @@ setup(
     author='LightStep',
     license='',
     install_requires=['thrift==0.9.2',
-                      'opentracing==1.0rc3',
+                      'opentracing>=2.0.0,<3.0',
                       'jsonpickle',
-                      'basictracer==1.0rc1'],
+                      'basictracer>=2.0.0,<3.0'],
     tests_require=['sphinx',
                    'sphinx-epytext'],
 
