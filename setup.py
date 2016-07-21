@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='lightstep',
-    version='2.0.9',
+    version='2.0.12',
     description='LightStep Python OpenTracing Implementation',
     long_description='',
     author='LightStep',
@@ -10,7 +10,7 @@ setup(
     install_requires=['thrift==0.9.2',
                       'opentracing>=2.0.0,<3.0',
                       'jsonpickle',
-                      'basictracer>=2.0.0,<3.0'],
+                      'basictracer==2.0.0.dev1'],
     tests_require=['sphinx',
                    'sphinx-epytext'],
 
