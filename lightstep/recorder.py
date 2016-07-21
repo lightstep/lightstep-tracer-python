@@ -41,9 +41,12 @@ class Recorder(SpanRecorder):
         """Force a flush of buffered Span data to LightStep"""
         self.runtime.flush()
 
+
 def _pretty_logs(logs):
     """A helper to format logs for console logging"""
     return ''.join(['\n  ' + pprint.pformat(log) for log in logs])
+
+
 def _pretty_span(span):
     """A helper to format a span for console logging"""
     span = {
@@ -55,6 +58,7 @@ def _pretty_span(span):
         'youngest_micros': util._now_micros(),
     }
     return ''.join(['\n ' + attr + ": " + str(span[attr]) for attr in span])
+
 
 class LoggingRecorder(SpanRecorder):
     """LoggingRecorder prints all spans to stdout."""
@@ -83,6 +87,7 @@ class LoggingRecorder(SpanRecorder):
     def flush(self):
         """A noop for LoggingRecorder"""
         return
+
 
 class Runtime(object):
     """Instances of Runtime send spans to the LightStep collector.

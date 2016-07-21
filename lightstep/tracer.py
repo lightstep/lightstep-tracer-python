@@ -34,10 +34,20 @@ def init_tracer(*args, **kwargs):
     :param int periodic_flush_seconds: seconds between periodic flushes, or 0
         to disable
     """
-    return BasicTracer(Recorder(*args, **kwargs))
+    return _LightstepTracer(Recorder(*args, **kwargs))
 
 
 def init_debug_tracer():
     """Returns a tracer that logs to the console instead of reporting to
     LightStep."""
     return BasicTracer(LoggingRecorder())
+
+
+class _LightstepTracer(BasicTracer):
+    def __init__(self, recorder):
+        """Initialize the LightStep Tracer, deferring to BasicTracer."""
+        super(_LightstepTracer, self).__init__(recorder)
+
+    def flush(self):
+        """Force a flush of buffered Span data to the LightStep collector."""
+        self.recorder.flush()
