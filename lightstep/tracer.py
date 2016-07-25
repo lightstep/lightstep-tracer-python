@@ -29,7 +29,6 @@ def init_tracer(*args, **kwargs):
     :param bool secure: whether HTTP connection is secure
     :param str service_host: Service host name
     :param int service_port: Service port number
-    :param int max_log_records: Maximum number of log records to buffer
     :param int max_span_records: Maximum number of spans records to buffer
     :param int periodic_flush_seconds: seconds between periodic flushes, or 0
         to disable
