@@ -31,7 +31,6 @@ class Recorder(SpanRecorder):
     """Recorder records and reports a BasicSpan to LightStep."""
     def __init__(self, *args, **kwargs):
         self.runtime = Runtime(*args, **kwargs)
-        self._runtime_guid = self.runtime._runtime.guid
 
     def record_span(self, span):
         """Per BasicSpan.record_span"""
@@ -40,24 +39,6 @@ class Recorder(SpanRecorder):
     def flush(self):
         """Force a flush of buffered Span data to LightStep"""
         self.runtime.flush()
-
-
-def _pretty_logs(logs):
-    """A helper to format logs for console logging"""
-    return ''.join(['\n  ' + pprint.pformat(log) for log in logs])
-
-
-def _pretty_span(span):
-    """A helper to format a span for console logging"""
-    span = {
-        'trace_guid': span.context.trace_id,
-        'span_guid': span.context.span_id,
-        'runtime_guid': span._tracer.recorder._runtime_guid,
-        'span_name': span.operation_name,
-        'oldest_micros': span.start_time,
-        'youngest_micros': util._now_micros(),
-    }
-    return ''.join(['\n ' + attr + ": " + str(span[attr]) for attr in span])
 
 
 class LoggingRecorder(SpanRecorder):
@@ -82,11 +63,30 @@ class LoggingRecorder(SpanRecorder):
                 timestamp_micros=long(util._time_to_micros(log.timestamp)),
                 stable_name=event,
                 payload_json=log.payload))
-        logging.warn('Reporting span %s \n with logs %s', _pretty_span(span), _pretty_logs(logs))
+        logging.info(
+            'Reporting span %s \n with logs %s',
+            self._pretty_span(span),
+            self._pretty_logs(logs))
 
     def flush(self):
         """A noop for LoggingRecorder"""
         return
+
+    def _pretty_span(self, span):
+        """A helper to format a span for console logging"""
+        span = {
+            'trace_guid': span.context.trace_id,
+            'span_guid': span.context.span_id,
+            'runtime_guid': self._runtime_guid,
+            'span_name': span.operation_name,
+            'oldest_micros': span.start_time,
+            'youngest_micros': util._now_micros(),
+        }
+        return ''.join(['\n ' + attr + ": " + str(span[attr]) for attr in span])
+
+    def _pretty_logs(self, logs):
+        """A helper to format logs for console logging"""
+        return ''.join(['\n  ' + pprint.pformat(log) for log in logs])
 
 
 class Runtime(object):
@@ -204,6 +204,9 @@ class Runtime(object):
 
         return self._flush_with_new_connection()
 
+    def guid(self):
+        return self._runtime.guid
+
     def _flush_with_new_connection(self):
         """Flush, starting a new connection first."""
         with contextlib.closing(conn._Connection(self._service_url)) as connection:
@@ -238,11 +241,13 @@ class Runtime(object):
                 for command in resp.commands:
                     if command.disable:
                         self.shutdown(flush=False)
-            return
+            # Return whether we sent any span data
+            return len(report_request.span_records) > 0
 
         except (Thrift.TException, socket_error):
             # TODO: re-enqueue the spans
-            pass
+            return False
+
 
     def _construct_report_request(self):
         """Construct a report request."""
@@ -274,7 +279,7 @@ class Runtime(object):
         span_record = ttypes.SpanRecord(
             trace_guid=str(span.context.trace_id),
             span_guid=str(span.context.span_id),
-            runtime_guid=str(span._tracer.recorder._runtime_guid),
+            runtime_guid=str(span._tracer.recorder.runtime.guid()),
             span_name=str(span.operation_name),
             join_ids=[],
             oldest_micros=long(util._time_to_micros(span.start_time)),
