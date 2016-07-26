@@ -9,7 +9,8 @@ setup(
     license='',
     install_requires=['thrift==0.9.2',
                       'jsonpickle',
-                      'basictracer==2.0.0.dev2'],
+                      'basictracer==2.0.0.dev3',
+                      'opentracing==2.0.0.dev3'],
     tests_require=['sphinx',
                    'sphinx-epytext'],
 
