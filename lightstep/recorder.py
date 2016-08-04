@@ -29,8 +29,8 @@ from . import constants, version as cruntime_version, util, connection as conn
 
 class Recorder(SpanRecorder):
     """Recorder records and reports a BasicSpan to LightStep."""
-    def __init__(self, *args, **kwargs):
-        self.runtime = Runtime(*args, **kwargs)
+    def __init__(self, **kwargs):
+        self.runtime = Runtime(**kwargs)
 
     def record_span(self, span):
         """Per BasicSpan.record_span"""

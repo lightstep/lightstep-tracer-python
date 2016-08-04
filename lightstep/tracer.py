@@ -9,6 +9,8 @@ See the API definition for comments.
 from __future__ import absolute_import
 
 from basictracer import BasicTracer
+from basictracer.text_propagator import TextPropagator
+from opentracing import Format
 
 from .recorder import Recorder, LoggingRecorder
 
@@ -21,7 +23,7 @@ _FIELD_NAME_SAMPLED = 'sampled'
 """ Note that these strings are lowercase because HTTP headers mess with capitalization.
 """
 
-def init_tracer(*args, **kwargs):
+def init_tracer(**kwargs):
     """Instantiates LightStep's OpenTracing implementation.
 
     :param str group_name: name identifying the type of service that is being tracked
@@ -32,8 +34,16 @@ def init_tracer(*args, **kwargs):
     :param int max_span_records: Maximum number of spans records to buffer
     :param int periodic_flush_seconds: seconds between periodic flushes, or 0
         to disable
+    :param bool disable_binary_format: Whether to disable the binary
+        inject/extract format (which relies on protobufs and may cause problems
+        if other versions of protobufs are active in the same packaging
+        configuration). Defaults to False (i.e., binary format is enabled).
     """
-    return _LightstepTracer(Recorder(*args, **kwargs))
+    enable_binary_format = True
+    if kwargs.has_key('disable_binary_format'):
+        enable_binary_format = not kwargs['disable_binary_format']
+        del kwargs['disable_binary_format']
+    return _LightstepTracer(enable_binary_format, Recorder(**kwargs))
 
 
 def init_debug_tracer():
@@ -43,9 +53,14 @@ def init_debug_tracer():
 
 
 class _LightstepTracer(BasicTracer):
-    def __init__(self, recorder):
+    def __init__(self, enable_binary_format, recorder):
         """Initialize the LightStep Tracer, deferring to BasicTracer."""
         super(_LightstepTracer, self).__init__(recorder)
+        self.register_propagator(Format.TEXT_MAP, TextPropagator())
+        self.register_propagator(Format.HTTP_HEADERS, TextPropagator())
+        if enable_binary_format:
+            from basictracer.binary_propagator import BinaryPropagator
+            self.register_propagator(Format.BINARY, BinaryPropagator())
 
     def flush(self):
         """Force a flush of buffered Span data to the LightStep collector."""
