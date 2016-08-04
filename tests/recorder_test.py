@@ -145,7 +145,7 @@ class RecorderTest(unittest.TestCase):
 
     def dummy_basic_span(self, recorder, i):
         return BasicSpan(
-            lightstep.tracer._LightstepTracer(recorder),
+            lightstep.tracer._LightstepTracer(False, recorder),
             operation_name=str(i),
             context=SpanContext(
                 trace_id=1000+i,
