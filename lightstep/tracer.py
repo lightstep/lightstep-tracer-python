@@ -51,6 +51,7 @@ def init_debug_tracer():
     LightStep."""
     tracer = BasicTracer(LoggingRecorder())
     tracer.register_required_propagators()
+    return tracer
 
 
 class _LightstepTracer(BasicTracer):
