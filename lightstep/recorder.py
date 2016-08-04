@@ -77,7 +77,7 @@ class LoggingRecorder(SpanRecorder):
         span = {
             'trace_guid': span.context.trace_id,
             'span_guid': span.context.span_id,
-            'runtime_guid': self._runtime_guid,
+            'runtime_guid': util._id_to_hex(self._runtime_guid),
             'span_name': span.operation_name,
             'oldest_micros': span.start_time,
             'youngest_micros': util._now_micros(),
@@ -126,7 +126,7 @@ class Runtime(object):
             group_name = sys.argv[0]
 
         # Thrift runtime configuration
-        guid = util._generate_guid()
+        self.guid = util._generate_guid()
         timestamp = util._now_micros()
 
         version = '.'.join(map(str, sys.version_info[0:3]))
@@ -137,7 +137,11 @@ class Runtime(object):
         ]
 
         # Thrift is picky about the types being correct, so we're explicit here
-        self._runtime = ttypes.Runtime(str(guid), long(timestamp), str(group_name), attrs)
+        self._runtime = ttypes.Runtime(
+                util._id_to_hex(self.guid),
+                long(timestamp),
+                str(group_name),
+                attrs)
         self._service_url = util._service_url_from_hostport(secure,
                                                             service_host,
                                                             service_port)
@@ -203,9 +207,6 @@ class Runtime(object):
             return self._flush_worker(connection)
 
         return self._flush_with_new_connection()
-
-    def guid(self):
-        return self._runtime.guid
 
     def _flush_with_new_connection(self):
         """Flush, starting a new connection first."""
@@ -277,9 +278,9 @@ class Runtime(object):
         Will delete a previously-added span if the limit has been reached.
         """
         span_record = ttypes.SpanRecord(
-            trace_guid=str(span.context.trace_id),
-            span_guid=str(span.context.span_id),
-            runtime_guid=str(span._tracer.recorder.runtime.guid()),
+            trace_guid=util._id_to_hex(span.context.trace_id),
+            span_guid=util._id_to_hex(span.context.span_id),
+            runtime_guid=util._id_to_hex(span._tracer.recorder.runtime.guid),
             span_name=str(span.operation_name),
             join_ids=[],
             oldest_micros=long(util._time_to_micros(span.start_time)),
@@ -290,7 +291,9 @@ class Runtime(object):
 
         if span.parent_id != None:
             span_record.attributes.append(
-                ttypes.KeyValue(constants.PARENT_SPAN_GUID, str(span.parent_id)))
+                ttypes.KeyValue(
+                    constants.PARENT_SPAN_GUID,
+                    util._id_to_hex(span.parent_id)))
         if span.tags:
             for key in span.tags:
                 if key[:len(constants.JOIN_ID_TAG_PREFIX)] == constants.JOIN_ID_TAG_PREFIX:
