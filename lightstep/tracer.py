@@ -49,7 +49,8 @@ def init_tracer(**kwargs):
 def init_debug_tracer():
     """Returns a tracer that logs to the console instead of reporting to
     LightStep."""
-    return BasicTracer(LoggingRecorder())
+    tracer = BasicTracer(LoggingRecorder())
+    tracer.register_required_propagators()
 
 
 class _LightstepTracer(BasicTracer):
