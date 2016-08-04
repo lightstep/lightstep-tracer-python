@@ -20,9 +20,12 @@ def _service_url_from_hostport(secure, host, port):
 
 def _generate_guid():
     """
-    Construct a guid - random 64 bit integer converted to a string.
+    Construct a guid - a random 64 bit integer
     """
-    return str(guid_rng.getrandbits(64))
+    return guid_rng.getrandbits(64) - 1
+
+def _id_to_hex(id):
+    return '{0:x}'.format(id)
 
 def _now_micros():
     """
