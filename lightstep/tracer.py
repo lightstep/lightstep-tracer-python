@@ -14,14 +14,6 @@ from opentracing import Format
 
 from .recorder import Recorder, LoggingRecorder
 
-_TRACER_STATE_PREFIX = "ot-tracer-"
-_BAGGAGE_PREFIX = "ot-baggage-"
-_BAGGAGE_PREFIX_LEN = len(_BAGGAGE_PREFIX)
-_FIELD_NAME_TRACE_GUID = 'traceid'
-_FIELD_NAME_SPAN_GUID = 'spanid'
-_FIELD_NAME_SAMPLED = 'sampled'
-""" Note that these strings are lowercase because HTTP headers mess with capitalization.
-"""
 
 def init_tracer(**kwargs):
     """Instantiates LightStep's OpenTracing implementation.
