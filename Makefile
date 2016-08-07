@@ -14,7 +14,7 @@ lint:
 docs:
 	cd docs && make html
 
-dist: build lint docs inc-version
+dist: build docs inc-version
 	mkdir -p dist
 	rm -rf dist
 	python setup.py sdist      # source distribution
