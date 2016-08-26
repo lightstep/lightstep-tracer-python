@@ -35,21 +35,22 @@ def add_spans():
             # Play with the propagation APIs... this is not IPC and thus not
             # where they're intended to be used.
             text_carrier = {}
-            opentracing.tracer.inject(child_span, opentracing.Format.TEXT_MAP, text_carrier)
+            opentracing.tracer.inject(child_span.context, opentracing.Format.TEXT_MAP, text_carrier)
 
-            with opentracing.tracer.join(
-                    'trivia/remote_span',
-                    opentracing.Format.TEXT_MAP,
-                    text_carrier) as remote_span:
-                remote_span.log_event('Remote!')
-                remote_span.set_tag('span_type', 'remote')
-                sleep_dot()
+            span_context = opentracing.tracer.extract(opentracing.Format.TEXT_MAP, text_carrier)
+            with opentracing.tracer.start_span(
+                'trivial/remote_span',
+                child_of=span_context) as remote_span:
+                    remote_span.log_event('Remote!')
+                    remote_span.set_tag('span_type', 'remote')
+                    sleep_dot()
 
 def lightstep_tracer_from_args():
     """Initializes lightstep from the commandline args.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--token', help='Your LightStep access token.')
+    parser.add_argument('--token', help='Your LightStep access token.',
+                        default='{your_access_token}')
     parser.add_argument('--host', help='The LightStep reporting service host to contact.',
                         default='collector.lightstep.com')
     parser.add_argument('--port', help='The LightStep reporting service port.',
@@ -87,20 +88,15 @@ if __name__ == '__main__':
 
     tracer = lightstep.tracer.init_debug_tracer()
     opentracing.tracer = tracer
-    
-    try:
-        add_spans()
-    finally:
-        tracer.flush()
+    add_spans()
 
     # Use LightStep's opentracing implementation
     tracer = lightstep_tracer_from_args()
     opentracing.tracer = tracer
-    
+
     try:
         add_spans()
     finally:
         tracer.flush()
 
     print 'World!'
-

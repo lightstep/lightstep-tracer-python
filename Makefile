@@ -30,8 +30,8 @@ scripts/node_modules:
 publish: dist
 	twine upload dist/*
 
-sample-app: build
-	python sample/send_spans_logs.py
+example: build
+	python examples/trivial/main.py
 
 test: build
 	tox
