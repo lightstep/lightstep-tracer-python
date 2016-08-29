@@ -338,8 +338,7 @@ class Runtime(object):
             return
 
         with self._mutex:
-            for record in span_records:
-                if len(self._span_records) < self._max_span_records:
-                    self._span_records.append(span_record)
-                else:
-                    return
+            if len(self._span_records) >= self._max_span_records:
+                return
+            combined = span_records + self._span_records
+            self._span_records = combined[-self._max_span_records:]
