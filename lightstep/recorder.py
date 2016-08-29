@@ -246,7 +246,7 @@ class Runtime(object):
             return len(report_request.span_records) > 0
 
         except (Thrift.TException, socket_error):
-            # TODO: re-enqueue the spans
+            self._restore_spans(report_request.span_records)
             return False
 
 
@@ -277,6 +277,19 @@ class Runtime(object):
 
         Will delete a previously-added span if the limit has been reached.
         """
+        if self._disabled_runtime:
+            return
+
+        # Checking the len() here *could* result in a span getting dropped that
+        # might have fit if a report started before the append(). This would only
+        # happen if the client lib was being saturated anyway (and likely
+        # dropping spans). But on the plus side, having the check here avoids
+        # doing a span conversion when the span will just be dropped while also
+        # keeping the lock scope minimized.
+        with self._mutex:
+            if len(self._span_records) >= self._max_span_records:
+                return
+
         span_record = ttypes.SpanRecord(
             trace_guid=util._id_to_hex(span.context.trace_id),
             span_guid=util._id_to_hex(span.context.span_id),
@@ -314,13 +327,18 @@ class Runtime(object):
                 stable_name=event,
                 payload_json=log.payload))
 
+        with self._mutex:
+            if len(self._span_records) < self._max_span_records:
+                self._span_records.append(span_record)
 
+    def _restore_spans(self, span_records):
+        """Called after a flush error to move records back into the buffer
+        """
         if self._disabled_runtime:
             return
+
         with self._mutex:
-            current_len = len(self._span_records)
             if len(self._span_records) >= self._max_span_records:
-                delete_index = random.randint(0, current_len - 1)
-                self._span_records[delete_index] = span_record
-            else:
-                self._span_records.append(span_record)
+                return
+            combined = span_records + self._span_records
+            self._span_records = combined[-self._max_span_records:]
