@@ -23,11 +23,13 @@ dist: build docs inc-version
 # TODO: There's inelegant dependency on Node.js here
 inc-version: scripts/node_modules
 	node scripts/inc_version.js
+	git tag `cat VERSION`
 
 scripts/node_modules:
 	cd scripts && npm update
 
 publish: dist
+	git push --tags
 	twine upload dist/*
 
 example: build
