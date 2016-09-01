@@ -32,7 +32,7 @@ publish: dist
 	@if [ $(shell git symbolic-ref --short -q HEAD) = "master" ]; then exit 0; else \
 	echo "Current git branch does not appear to be 'master'. Refusing to publish."; exit 1; \
 	fi
-	git add VERSION lightstep.version.py setup.py
+	git add VERSION lightstep/version.py setup.py
 	git commit -m "Updating Version to `cat VERSION`"
 	git push
 	git push --tags
