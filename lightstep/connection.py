@@ -23,9 +23,9 @@ class _Connection(object):
         self.ready = False
         self._open_exceptions_count = 0
         self._report_eof_count = 0
+        self._report_socket_errors = 0
         self._report_exceptions_count = 0
         self._report_consecutive_errors = 0
-        self._report_socket_errors = 0
 
     def open(self):
         """Establish HTTP connection to the server.
