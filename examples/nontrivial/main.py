@@ -9,7 +9,7 @@ import time
 import threading
 import random
 
-# Uncomment to test against the local copy
+# Comment out to test against the published copy
 import os
 sys.path.insert(1, os.path.dirname(os.path.realpath(__file__)) + '/../..')
 
