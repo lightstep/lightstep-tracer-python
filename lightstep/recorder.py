@@ -196,7 +196,7 @@ class Runtime(object):
         immediately sent to the host server.
 
         If connection is not specified, the report will sent to the server
-        passed in to __init__.  Note that custom connetions are currently used
+        passed in to __init__.  Note that custom connections are currently used
         for unit testing against a mocked connection.
 
         Returns whether the data was successfully flushed.

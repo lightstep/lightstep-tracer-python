@@ -7,7 +7,7 @@ from thrift.transport import THttpClient
 from thrift.protocol import TBinaryProtocol
 from .crouton import ReportingService
 
-CONSECUTIVE_ERRORS_BEFORE_RECONNECT = 100
+CONSECUTIVE_ERRORS_BEFORE_RECONNECT = 200
 
 class _Connection(object):
     """Instances of _Connection are used to establish a connection to the
