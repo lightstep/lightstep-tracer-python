@@ -25,7 +25,7 @@ class _Connection(object):
         self._report_eof_count = 0
         self._report_exceptions_count = 0
         self._report_consecutive_errors = 0
-        self._report_socker_errors = 0
+        self._report_socket_errors = 0
 
     def open(self):
         """Establish HTTP connection to the server.
@@ -69,8 +69,8 @@ class _Connection(object):
             raise Exception('EOFError')
         except socket_error:
             self._report_consecutive_errors += 1
-            self._report_socker_errors += 1
-            raise Exception('socker_error')
+            self._report_socket_errors += 1
+            raise Exception('socket_error')
         finally:
             # In case the Thrift client has fallen into an unrecoverable state,
             # recreate the Thrift data structure if there are continued report
