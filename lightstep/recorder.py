@@ -250,7 +250,7 @@ class Runtime(object):
             # Return whether we sent any span data
             return len(report_request.span_records) > 0
 
-        except (Thrift.TException, socket_error):
+        except Exception:
             self._restore_spans(report_request.span_records)
             return False
 

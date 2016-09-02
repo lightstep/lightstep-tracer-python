@@ -25,6 +25,7 @@ class _Connection(object):
         self._report_eof_count = 0
         self._report_exceptions_count = 0
         self._report_consecutive_errors = 0
+        self._report_socker_errors = 0
 
     def open(self):
         """Establish HTTP connection to the server.
@@ -46,6 +47,7 @@ class _Connection(object):
             self._lock.release()
 
 
+    # May throw an Exception on failure.
     def report(self, *args, **kwargs):
         """Report to the server."""
         # Notice the annoying case change on the method name. I chose to stay
@@ -60,9 +62,15 @@ class _Connection(object):
         except Thrift.TException:
             self._report_consecutive_errors += 1
             self._report_exceptions_count += 1
+            raise Exception('Thrift exception')
         except EOFError:
             self._report_consecutive_errors += 1
             self._report_eof_count += 1
+            raise Exception('EOFError')
+        except socket_error:
+            self._report_consecutive_errors += 1
+            self._report_socker_errors += 1
+            raise Exception('socker_error')
         finally:
             # In case the Thrift client has fallen into an unrecoverable state,
             # recreate the Thrift data structure if there are continued report
@@ -84,5 +92,6 @@ class _Connection(object):
         self._lock.acquire()
         try:
             self._transport.close()
+            self.ready = False
         finally:
             self._lock.release()
