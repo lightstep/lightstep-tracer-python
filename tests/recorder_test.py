@@ -58,18 +58,6 @@ class RecorderTest(unittest.TestCase):
         """
         return lightstep.recorder.Recorder(**self.runtime_args)
 
-    # ---------------
-    # NO PARAM TESTS
-    # ---------------
-    def test_init_without_params(self):
-        # Won't be able to send logs and spans - but shouldn't crash
-        recorder = lightstep.recorder.Recorder()
-        recorder.record_span(self.dummy_basic_span(recorder, 123))
-        self.assertFalse(recorder.runtime.flush(),
-                         "Flush should have failed to reach backend")
-        self.assertFalse(recorder.runtime.shutdown(flush=True),
-                         "Shutdown's flush should have failed to reach backend.")
-
     # -------------
     # SHUTDOWN TESTS
     # -------------
