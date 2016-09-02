@@ -13,7 +13,6 @@ import contextlib
 import jsonpickle
 import logging
 import pprint
-import random
 import ssl
 import sys
 import threading
@@ -158,10 +157,10 @@ class Runtime(object):
             warnings.warn(
                 'Runtime(periodic_flush_seconds={0}) means we will never flush to lightstep unless explicitly requested.'.format(
                     self._periodic_flush_seconds))
-            self._periodic_flush_connection = None
+            self._flush_connection = None
         else:
-            self._periodic_flush_connection = conn._Connection(self._service_url)
-            self._periodic_flush_connection.open()
+            self._flush_connection = conn._Connection(self._service_url)
+            self._flush_connection.open()
             self._flush_thread = threading.Thread(target=self._flush_periodically,
                                                   name=constants.FLUSH_THREAD_NAME)
             self._flush_thread.daemon = True
@@ -179,13 +178,14 @@ class Runtime(object):
         # if runtime has already been disabled.
         if self._disabled_runtime:
             return False
-        self._disabled_runtime = True
 
         if flush:
-            flushed = self._flush_with_new_connection()
+            flushed = self.flush()
 
-        if self._periodic_flush_connection:
-            self._periodic_flush_connection.close()
+        if self._flush_connection:
+            self._flush_connection.close()
+
+        self._disabled_runtime = True
 
         return flushed
 
@@ -196,7 +196,8 @@ class Runtime(object):
         immediately sent to the host server.
 
         If connection is not specified, the report will sent to the server
-        passed in to __init__.
+        passed in to __init__.  Note that custom connetions are currently used
+        for unit testing against a mocked connection.
 
         Returns whether the data was successfully flushed.
         """
@@ -205,14 +206,8 @@ class Runtime(object):
 
         if connection is not None:
             return self._flush_worker(connection)
+        return self._flush_worker(self._flush_connection)
 
-        return self._flush_with_new_connection()
-
-    def _flush_with_new_connection(self):
-        """Flush, starting a new connection first."""
-        with contextlib.closing(conn._Connection(self._service_url)) as connection:
-            connection.open()
-            return self._flush_worker(connection)
 
     def _flush_periodically(self):
         """Periodically send reports to the server.
@@ -220,28 +215,38 @@ class Runtime(object):
         Runs in a dedicated daemon thread (self._flush_thread).
         """
         # Open the connection
-        while not self._disabled_runtime and not self._periodic_flush_connection.ready:
+        while not self._disabled_runtime and not self._flush_connection.ready:
             time.sleep(self._periodic_flush_seconds)
-            self._periodic_flush_connection.open()
+            self._flush_connection.open()
 
         # Send data until we get disabled
         while not self._disabled_runtime:
-            self._flush_worker(self._periodic_flush_connection)
+            self._flush_worker(self._flush_connection)
             time.sleep(self._periodic_flush_seconds)
 
     def _flush_worker(self, connection):
         """Use the given connection to transmit the current logs and spans as a
         report request."""
+        if connection == None:
+            return False
+
+        # If the connection is not ready, try reestablishing it. If that
+        # fails just wait until the next flush attempt to try again.
         if not connection.ready:
-            return
+            connection.open()
+        if not connection.ready:
+            return False
 
         report_request = self._construct_report_request()
         try:
             resp = connection.report(self._auth, report_request)
-            if resp.commands is not None:
-                for command in resp.commands:
-                    if command.disable:
-                        self.shutdown(flush=False)
+
+            # The resp may be None on failed reports
+            if resp is not None:
+                if resp.commands is not None:
+                    for command in resp.commands:
+                        if command.disable:
+                            self.shutdown(flush=False)
             # Return whether we sent any span data
             return len(report_request.span_records) > 0
 
