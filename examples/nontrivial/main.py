@@ -1,4 +1,6 @@
-"""Complex example
+"""
+Synthetic example with high concurrency. Used primarily to stress test the
+library.
 """
 import argparse
 import contextlib

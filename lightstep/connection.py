@@ -13,7 +13,9 @@ class _Connection(object):
     """Instances of _Connection are used to establish a connection to the
     server via HTTP protocol.
 
-    This class is NOT THREADSAFE and access must by synchronized externally.
+    Only one instance of this class should be created per process. The object
+    itself is thread-safe, but the underlying Thrift library has shared state
+    that makes unsafe to call multiple instances of this class concurrrently.
     """
     def __init__(self, service_url):
         self._service_url = service_url
@@ -54,31 +56,30 @@ class _Connection(object):
         # consistent with casing in this class vs staying consistent with the
         # casing of the pass-through method.
         resp = None
-        self._lock.acquire()
-        try:
-            if self._client:
-                resp = self._client.Report(*args, **kwargs)
-                self._report_consecutive_errors = 0
-        except Thrift.TException:
-            self._report_consecutive_errors += 1
-            self._report_exceptions_count += 1
-            raise Exception('Thrift exception')
-        except EOFError:
-            self._report_consecutive_errors += 1
-            self._report_eof_count += 1
-            raise Exception('EOFError')
-        except socket_error:
-            self._report_consecutive_errors += 1
-            self._report_socket_errors += 1
-            raise Exception('socket_error')
-        finally:
-            # In case the Thrift client has fallen into an unrecoverable state,
-            # recreate the Thrift data structure if there are continued report
-            # failures
-            if self._report_consecutive_errors == CONSECUTIVE_ERRORS_BEFORE_RECONNECT:
-                self._report_consecutive_errors = 0
-                self.ready = False
-            self._lock.release()
+        with self._lock:
+            try:
+                if self._client:
+                    resp = self._client.Report(*args, **kwargs)
+                    self._report_consecutive_errors = 0
+            except Thrift.TException:
+                self._report_consecutive_errors += 1
+                self._report_exceptions_count += 1
+                raise Exception('Thrift exception')
+            except EOFError:
+                self._report_consecutive_errors += 1
+                self._report_eof_count += 1
+                raise Exception('EOFError')
+            except socket_error:
+                self._report_consecutive_errors += 1
+                self._report_socket_errors += 1
+                raise Exception('socket_error')
+            finally:
+                # In case the Thrift client has fallen into an unrecoverable state,
+                # recreate the Thrift data structure if there are continued report
+                # failures
+                if self._report_consecutive_errors == CONSECUTIVE_ERRORS_BEFORE_RECONNECT:
+                    self._report_consecutive_errors = 0
+                    self.ready = False
 
         return resp
 
@@ -89,9 +90,6 @@ class _Connection(object):
         if self._client is None:
             return
 
-        self._lock.acquire()
-        try:
+        with self._lock:
             self._transport.close()
             self.ready = False
-        finally:
-            self._lock.release()
