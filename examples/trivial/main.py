@@ -4,6 +4,7 @@ import argparse
 import contextlib
 import sys
 import time
+import traceback
 
 import opentracing
 import lightstep.tracer
@@ -28,8 +29,10 @@ def add_spans():
 
         # This is how you would represent starting work locally.
         with opentracing.start_child_span(parent_span, operation_name='trivial/child_request') as child_span:
-            child_span.log_event('Uh Oh!', payload={'error': True})
             child_span.set_tag('span_type', 'child')
+            # Pretend there was an error
+            child_span.set_tag('error', True)
+            child_span.log_event('Uh Oh!', payload={'stacktrace': traceback.extract_stack()})
             sleep_dot()
 
             # Play with the propagation APIs... this is not IPC and thus not
