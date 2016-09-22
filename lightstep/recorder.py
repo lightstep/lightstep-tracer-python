@@ -52,16 +52,16 @@ class LoggingRecorder(SpanRecorder):
         logs = []
         for log in span.logs:
             event = ""
-            if len(log.event) > 0:
+            if len(log.key_values["event"]) > 0:
                 # Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(log.event) > constants.MAX_LOG_MEMORY:
-                    event = log.event[:constants.MAX_LOG_LEN]
+                if sys.getsizeof(log.key_values["event"]) > constants.MAX_LOG_MEMORY:
+                    event = log.key_values["event"][:constants.MAX_LOG_LEN]
                 else:
-                    event = log.event
+                    event = log.key_values["event"]
             logs.append(ttypes.LogRecord(
                 timestamp_micros=long(util._time_to_micros(log.timestamp)),
                 stable_name=event,
-                payload_json=log.payload))
+                payload_json=log.key_values["payload"]))
         logging.info(
             'Reporting span %s \n with logs %s',
             self._pretty_span(span),
@@ -321,16 +321,16 @@ class Runtime(object):
 
         for log in span.logs:
             event = ""
-            if len(log.event) > 0:
+            if len(log.key_values["event"]) > 0:
                 # Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(log.event) > constants.MAX_LOG_MEMORY:
-                    event = log.event[:constants.MAX_LOG_LEN]
+                if sys.getsizeof(log.key_values["event"]) > constants.MAX_LOG_MEMORY:
+                    event = log.key_values["event"][:constants.MAX_LOG_LEN]
                 else:
-                    event = log.event
+                    event = log.key_values["event"]
             span_record.log_records.append(ttypes.LogRecord(
                 timestamp_micros=long(util._time_to_micros(log.timestamp)),
                 stable_name=event,
-                payload_json=log.payload))
+                payload_json=log.key_values["payload"]))
 
         with self._mutex:
             if len(self._span_records) < self._max_span_records:
