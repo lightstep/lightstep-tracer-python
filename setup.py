@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='lightstep',
-    version='2.1.11',
+    version='2.2.0',
     description='LightStep Python OpenTracing Implementation',
     long_description='',
     author='LightStep',
@@ -10,15 +10,14 @@ setup(
     install_requires=['thrift==0.9.2',
                       'jsonpickle',
                       'pytest',
-                      'basictracer>=2.1,<2.2',
-                      'opentracing>=1.1,<1.2'],
+                      'basictracer>=2.2,<2.3',
+                      'opentracing>=1.2,<1.3'],
     tests_require=['sphinx',
                    'sphinx-epytext'],
 
     classifiers=[
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',
-        # 'Programming Language :: Python :: 3',
     ],
 
     keywords=[ 'opentracing', 'lightstep', 'traceguide', 'tracing', 'microservices', 'distributed' ],
