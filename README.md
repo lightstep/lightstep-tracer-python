@@ -4,9 +4,6 @@
 
 The LightStep distributed tracing library for Python.
 
-* [Installation](#installation)
-* [Getting Started](#getting-started)
-
 ## Installation
 
 ```bash
