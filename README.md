@@ -1,8 +1,8 @@
-# LightStep OpenTracing Bindings
+# lightstep-tracer-python
 
 [![PyPI](https://img.shields.io/pypi/v/lightstep.svg?maxAge=2592000)]() [![Circle CI](https://circleci.com/gh/lightstep/lightstep-tracer-python.svg?style=shield)](https://circleci.com/gh/lightstep/lightstep-tracer-python) [![MIT license](http://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 
-This library is the LightStep binding for [OpenTracing](http://opentracing.io/). See the [OpenTracing Python API](https://github.com/opentracing/opentracing-python) for additional detail.
+The LightStep distributed tracing library for Python.
 
 * [Installation](#installation)
 * [Getting Started](#getting-started)
@@ -14,7 +14,7 @@ apt-get install python-dev
 pip install lightstep
 ```
 
-## Getting Started
+## Getting started
 
 Please see the [example programs](examples/) for examples of how to use this library. In particular:
 
@@ -37,4 +37,6 @@ if __name__ == "__main__":
 
   opentracing.tracer.flush()
 ```
+
+This library is the LightStep binding for [OpenTracing](http://opentracing.io/). See the [OpenTracing Python API](https://github.com/opentracing/opentracing-python) for additional detail.
 
