@@ -7,6 +7,14 @@ default: test
 build:
 	echo "Nothing to build"
 
+check-virtual-env:
+	@echo virtual-env: $${VIRTUAL_ENV?"Please run in virtual-env"}
+
+bootstrap: check-virtual-env
+	pip install -r requirements.txt
+	pip install -r requirements-test.txt
+	python setup.py develop
+
 lint:
 	pylint -r n --disable=invalid-name,global-statement,bare-except \
 		lightstep/tracer.py lightstep/constants.py lightstep/recorder.py
