@@ -23,7 +23,10 @@ def add_spans():
         parent_span.set_tag('url', 'localhost')
         sleep_dot()
         parent_span.log_event('All good here!', payload={'N': 42, 'pi': 3.14, 'abc': 'xyz'})
+        parent_span.log_kv({'foo': 'bar'})
         parent_span.set_tag('span_type', 'parent')
+        parent_span.set_tag('int_tag', 5)
+        parent_span.set_tag('bool_tag', True)
         parent_span.set_baggage_item('checked', 'baggage')
         sleep_dot()
 

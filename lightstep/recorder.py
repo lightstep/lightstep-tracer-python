@@ -51,17 +51,16 @@ class LoggingRecorder(SpanRecorder):
 
         logs = []
         for log in span.logs:
-            event = ""
-            if len(log.key_values["event"]) > 0:
+            event = log.key_values.get("event") or ""
+            if len(event) > 0:
                 # Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(log.key_values["event"]) > constants.MAX_LOG_MEMORY:
-                    event = log.key_values["event"][:constants.MAX_LOG_LEN]
-                else:
-                    event = log.key_values["event"]
+                if sys.getsizeof(event) > constants.MAX_LOG_MEMORY:
+                    event = event[:constants.MAX_LOG_LEN]
+            payload = log.key_values.get("payload")
             logs.append(ttypes.LogRecord(
                 timestamp_micros=long(util._time_to_micros(log.timestamp)),
                 stable_name=event,
-                payload_json=log.key_values["payload"]))
+                payload_json=payload))
         logging.info(
             'Reporting span %s \n with logs %s',
             self._pretty_span(span),
@@ -250,7 +249,7 @@ class Runtime(object):
             # Return whether we sent any span data
             return len(report_request.span_records) > 0
 
-        except Exception:
+        except Exception as e:
             self._restore_spans(report_request.span_records)
             return False
 
@@ -315,22 +314,21 @@ class Runtime(object):
         if span.tags:
             for key in span.tags:
                 if key[:len(constants.JOIN_ID_TAG_PREFIX)] == constants.JOIN_ID_TAG_PREFIX:
-                    span_record.join_ids.append(ttypes.TraceJoinId(key, span.tags[key]))
+                    span_record.join_ids.append(ttypes.TraceJoinId(key, str(span.tags[key])))
                 else:
-                    span_record.attributes.append(ttypes.KeyValue(key, span.tags[key]))
+                    span_record.attributes.append(ttypes.KeyValue(key, str(span.tags[key])))
 
         for log in span.logs:
-            event = ""
-            if len(log.key_values["event"]) > 0:
+            event = log.key_values.get("event") or ""
+            if len(event) > 0:
                 # Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(log.key_values["event"]) > constants.MAX_LOG_MEMORY:
-                    event = log.key_values["event"][:constants.MAX_LOG_LEN]
-                else:
-                    event = log.key_values["event"]
+                if sys.getsizeof(event) > constants.MAX_LOG_MEMORY:
+                    event = event[:constants.MAX_LOG_LEN]
+            payload = log.key_values.get("payload")
             span_record.log_records.append(ttypes.LogRecord(
                 timestamp_micros=long(util._time_to_micros(log.timestamp)),
                 stable_name=event,
-                payload_json=log.key_values["payload"]))
+                payload_json=payload))
 
         with self._mutex:
             if len(self._span_records) < self._max_span_records:

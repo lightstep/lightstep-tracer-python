@@ -69,10 +69,6 @@ class _Connection(object):
                 self._report_consecutive_errors += 1
                 self._report_eof_count += 1
                 raise Exception('EOFError')
-            except socket_error:
-                self._report_consecutive_errors += 1
-                self._report_socket_errors += 1
-                raise Exception('socket_error')
             finally:
                 # In case the Thrift client has fallen into an unrecoverable state,
                 # recreate the Thrift data structure if there are continued report
