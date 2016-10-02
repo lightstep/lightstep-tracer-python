@@ -22,11 +22,11 @@ Or if your python code is already instrumented for OpenTracing, you can simply s
 
 ```python
 import opentracing
-import lightstep.tracer
+import lightstep
 
 if __name__ == "__main__":
-  opentracing.tracer = lightstep.tracer.init_tracer(
-    group_name='your_process_type',
+  opentracing.tracer = lightstep.Tracer(
+    component_name='your_microservice_name',
     access_token='{your_access_token}')
 
   with opentracing.tracer.start_span('TestSpan') as span:

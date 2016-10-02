@@ -46,11 +46,11 @@ class RecorderTest(unittest.TestCase):
     def setUp(self):
         self.mock_connection = MockConnection()
         self.mock_connection.open()
-        self.runtime_args = {'secure': False,
-                             'service_host': 'localhost',
-                             'service_port': 9998,
+        self.runtime_args = {'collector_encryption': 'none',
+                             'collector_host': 'localhost',
+                             'collector_port': 9998,
                              'access_token': '{your_access_token}',
-                             'group_name': 'python/runtime_test',
+                             'component_name': 'python/runtime_test',
                              'periodic_flush_seconds': 0}
 
     def create_test_recorder(self):
@@ -67,25 +67,25 @@ class RecorderTest(unittest.TestCase):
         # Send 10 spans
         for i in range(10):
             recorder.record_span(self.dummy_basic_span(recorder, i))
-        self.assertTrue(recorder.runtime.flush(self.mock_connection))
+        self.assertTrue(recorder.flush(self.mock_connection))
 
         # Check 10 spans
         self.check_spans(self.mock_connection.reports[0].span_records)
 
         # Delete current logs and shutdown runtime
         self.mock_connection.clear()
-        recorder.runtime.shutdown()
+        recorder.shutdown()
 
         # Send 10 spans, though none should get through
         for i in range(10):
             recorder.record_span(self.dummy_basic_span(recorder, i))
-        self.assertFalse(recorder.runtime.flush(self.mock_connection))
+        self.assertFalse(recorder.flush(self.mock_connection))
         self.assertEqual(len(self.mock_connection.reports), 0)
 
     def test_shutdown_twice(self):
         recorder = self.create_test_recorder()
-        recorder.runtime.shutdown()
-        recorder.runtime.shutdown()
+        recorder.shutdown()
+        recorder.shutdown()
 
     # ------------
     # STRESS TESTS
@@ -94,7 +94,7 @@ class RecorderTest(unittest.TestCase):
         recorder = self.create_test_recorder()
         for i in range(1000):
             recorder.record_span(self.dummy_basic_span(recorder, i))
-        self.assertTrue(recorder.runtime.flush(self.mock_connection))
+        self.assertTrue(recorder.flush(self.mock_connection))
         self.assertEqual(len(self.mock_connection.reports[0].span_records), 1000)
         self.check_spans(self.mock_connection.reports[0].span_records)
 
@@ -102,7 +102,7 @@ class RecorderTest(unittest.TestCase):
         recorder = self.create_test_recorder()
         for i in range(1000):
             recorder.record_span(self.dummy_basic_span(recorder, i))
-        self.assertTrue(recorder.runtime.flush(self.mock_connection))
+        self.assertTrue(recorder.flush(self.mock_connection))
         self.assertEqual(len(self.mock_connection.reports[0].span_records), 1000)
         self.check_spans(self.mock_connection.reports[0].span_records)
 
@@ -116,11 +116,11 @@ class RecorderTest(unittest.TestCase):
         })
         recorder = self.create_test_recorder()
 
-        self.assertEqual(len(recorder.runtime._span_records), 0)
+        self.assertEqual(len(recorder._span_records), 0)
         for i in range(0, 10000):
             recorder.record_span(self.dummy_basic_span(recorder, i))
-        self.assertEqual(len(recorder.runtime._span_records), 88)
-        self.assertTrue(recorder.runtime.flush(self.mock_connection))
+        self.assertEqual(len(recorder._span_records), 88)
+        self.assertTrue(recorder.flush(self.mock_connection))
 
     # ------
     # HELPER

@@ -17,8 +17,8 @@ class _Connection(object):
     itself is thread-safe, but the underlying Thrift library has shared state
     that makes unsafe to call multiple instances of this class concurrrently.
     """
-    def __init__(self, service_url):
-        self._service_url = service_url
+    def __init__(self, collector_url):
+        self._collector_url = collector_url
         self._lock = threading.Lock()
         self._transport = None
         self._client = None
@@ -37,7 +37,7 @@ class _Connection(object):
         """
         self._lock.acquire()
         try:
-            self._transport = THttpClient.THttpClient(self._service_url)
+            self._transport = THttpClient.THttpClient(self._collector_url)
             self._transport.open()
             protocol = TBinaryProtocol.TBinaryProtocol(self._transport)
             self._client = ReportingService.Client(protocol)

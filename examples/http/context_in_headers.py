@@ -16,8 +16,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import opentracing
 import opentracing.ext.tags
-
-import lightstep.tracer
+import lightstep
 
 class RemoteHandler(BaseHTTPRequestHandler):
     """This handler receives the request from the client.
@@ -64,7 +63,7 @@ def before_answering_request(handler, tracer):
     if extracted_context:
         span = tracer.start_span(
                 operation_name=operation,
-                references=opentracing.ChildOf(extracted_context))
+                child_of=extracted_context)
     else:
         print 'ERROR: Context missing, starting new trace'
         global _exit_code
@@ -97,65 +96,61 @@ def lightstep_tracer_from_args():
     """Initializes lightstep from the commandline args.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--token', help='Your LightStep access token.')
+    parser.add_argument('--token', help='Your LightStep access token.',
+            default='{your_access_token}')
     parser.add_argument('--host', help='The LightStep reporting service host to contact.',
-                        default='collector.lightstep.com')
+            default='collector.lightstep.com')
     parser.add_argument('--port', help='The LightStep reporting service port.',
-                        type=int, default=443)
+            type=int, default=443)
     parser.add_argument('--use_tls', help='Whether to use TLS for reporting',
-                        type=bool, default=True)
-    parser.add_argument('--group_name', help='The LightStep runtime group',
-                        default='context_in_headers_example')
+            type=bool, default=True)
+    parser.add_argument('--component_name', help='The LightStep component name',
+            default='TrivialExample')
     args = parser.parse_args()
 
-    if args.use_tls:
-	return lightstep.tracer.init_tracer(
-	    group_name=args.group_name,
-	    access_token=args.token,
-	    service_host=args.host,
-	    service_port=args.port)
-    else:
-	return lightstep.tracer.init_tracer(
-	    group_name=args.group_name,
-	    access_token=args.token,
-	    service_host=args.host,
-	    service_port=args.port,
-	    secure=False)
+    return lightstep.Tracer(
+            component_name=args.component_name,
+            access_token=args.token,
+            collector_host=args.host,
+            collector_port=args.port,
+            collector_encryption=('tls' if args.use_tls else 'none'),
+            )
 
 
 if __name__ == '__main__':
-    opentracing.tracer = lightstep_tracer_from_args()
-    global _exit_code
-    _exit_code = 0
+    with lightstep_tracer_from_args() as tracer:
+        opentracing.tracer = tracer
+        global _exit_code
+        _exit_code = 0
 
-    # Create a web server and define the handler to manage the incoming request
-    port_number = pick_unused_port()
-    server = HTTPServer(('', port_number), RemoteHandler)
+        # Create a web server and define the handler to manage the incoming request
+        port_number = pick_unused_port()
+        server = HTTPServer(('', port_number), RemoteHandler)
 
-    try:
-        # Run the server in a separate thread.
-        server_thread = threading.Thread(target=server.serve_forever)
-        server_thread.start()
-        print 'Started httpserver on port ', port_number
+        try:
+            # Run the server in a separate thread.
+            server_thread = threading.Thread(target=server.serve_forever)
+            server_thread.start()
+            print 'Started httpserver on port ', port_number
 
-        # Prepare request in the client
-        url = 'http://localhost:{}'.format(port_number)
-        request = urllib2.Request(url)
-        with before_sending_request(request) as client_span:
-            client_span.log_event('sending request', url)
+            # Prepare request in the client
+            url = 'http://localhost:{}'.format(port_number)
+            request = urllib2.Request(url)
+            with before_sending_request(request) as client_span:
+                client_span.log_event('sending request', url)
 
-            # Send request to server
-            response = urllib2.urlopen(request)
+                # Send request to server
+                response = urllib2.urlopen(request)
 
-            response_body = response.read()
-            client_span.log_event('server returned', {
-                "code": response.code,
-                "body": response_body,
-            })
+                response_body = response.read()
+                client_span.log_event('server returned', {
+                    "code": response.code,
+                    "body": response_body,
+                })
 
-        print 'Server returned ' + str(response.code) + ': ' + response_body
+            print 'Server returned ' + str(response.code) + ': ' + response_body
 
-        sys.exit(_exit_code)
+            sys.exit(_exit_code)
 
-    finally:
-        server.shutdown()
+        finally:
+            server.shutdown()

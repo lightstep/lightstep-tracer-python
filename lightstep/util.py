@@ -6,9 +6,9 @@ import constants
 
 guid_rng = random.Random()   # Uses urandom seed
 
-def _service_url_from_hostport(secure, host, port):
+def _collector_url_from_hostport(secure, host, port):
     """
-    Create an appropriate service URL given the parameters.
+    Create an appropriate collector URL given the parameters.
 
     `secure` should be a bool.
     """

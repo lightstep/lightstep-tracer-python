@@ -12,12 +12,7 @@ class LightStepTracerOpenTracingCompatibility(unittest.TestCase, APICompatibilit
     I believe this is a concurrency problem because this is the first time we have multiple instances of Runtime running in a single binary.
     """
     def tracer(self):
-        return lightstep.tracer.init_tracer(periodic_flush_seconds=0)
-
-
-class DebugTracerOpenTracingCompatibility(unittest.TestCase, APICompatibilityCheckMixin):
-    def tracer(self):
-        return lightstep.tracer.init_debug_tracer()
+        return lightstep.Tracer(periodic_flush_seconds=0)
 
 
 if __name__ == '__main__':

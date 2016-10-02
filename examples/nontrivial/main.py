@@ -14,7 +14,7 @@ import os
 sys.path.insert(1, os.path.dirname(os.path.realpath(__file__)) + '/../..')
 
 import opentracing
-import lightstep.tracer
+import lightstep
 
 def sleep_dot():
     """Short sleep and writes a dot to the STDOUT.
@@ -71,31 +71,33 @@ def lightstep_tracer_from_args():
                         type=int, default=443)
     parser.add_argument('--use_tls', help='Whether to use TLS for reporting',
                         type=bool, default=True)
-    parser.add_argument('--group-name', help='The LightStep component name',
-                        default='python-examples-nontrivial')
+    parser.add_argument('--component_name', help='The LightStep component name',
+                        default='NonTrivialExample')
     args = parser.parse_args()
 
-    return lightstep.tracer.init_tracer(
-	    group_name=args.group_name,
+    return lightstep.Tracer(
+	    component_name=args.component_name,
 	    access_token=args.token,
-	    service_host=args.host,
-	    service_port=args.port,
-	    secure=args.use_tls)
+	    collector_host=args.host,
+	    collector_port=args.port,
+        collector_encryption=('tls' if args.use_tls else 'none'))
 
 
 if __name__ == '__main__':
-    print 'Hello '
+    print 'Hello ',
 
     # Use LightStep's opentracing implementation
-    opentracing.tracer = lightstep_tracer_from_args()
+    with lightstep_tracer_from_args() as tracer:
+        opentracing.tracer = tracer
 
-    for j in range(20):
-        threads = []
-        for i in range(64):
-            t = threading.Thread(target=add_spans)
-            threads.append(t)
-            t.start()
-        for t in threads:
-            t.join()
-        print '\n'
-    print '\nWorld!'
+        for j in range(20):
+            threads = []
+            for i in range(64):
+                t = threading.Thread(target=add_spans)
+                threads.append(t)
+                t.start()
+            for t in threads:
+                t.join()
+            print '\n'
+
+    print ' World!'
