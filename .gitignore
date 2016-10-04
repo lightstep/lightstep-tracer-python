@@ -6,3 +6,4 @@ lightstep.egg-info/*
 dist/*
 .tox/*
 **.pyc
+.cache/*

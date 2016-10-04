@@ -12,20 +12,35 @@ from basictracer import BasicTracer
 from basictracer.text_propagator import TextPropagator
 from opentracing import Format
 
-from .recorder import Recorder, LoggingRecorder
+from .recorder import Recorder
 
 
-def init_tracer(**kwargs):
+def Tracer(**kwargs):
     """Instantiates LightStep's OpenTracing implementation.
 
-    :param str group_name: name identifying the type of service that is being tracked
-    :param str access_token: project's access token
-    :param bool secure: whether HTTP connection is secure
-    :param str service_host: Service host name
-    :param int service_port: Service port number
+    :param str component_name: the human-readable identity of the instrumented
+        process. I.e., if one drew a block diagram of the distributed system,
+        the component_name would be the name inside the box that includes this
+        process.
+    :param str access_token: the LightStep project's access token
+    :param str collector_host: LightStep collector hostname
+    :param int collector_port: LightStep collector port
+    :param str collector_encryption: one of 'tls' or 'none'. If nothing is
+        specified, the default is 'tls'.
+    :param dict tags: a string->string dict of tags for the Tracer itself (as
+        opposed to the Spans it records)
     :param int max_span_records: Maximum number of spans records to buffer
-    :param int periodic_flush_seconds: seconds between periodic flushes, or 0
-        to disable
+    :param int periodic_flush_seconds: seconds between periodic background
+        flushes, or 0 to disable background flushes entirely.
+    :param int verbosity: verbosity for (debug) logging, all via logging.info().
+        0 (default): log nothing
+        1: log transient problems
+        2: log all of the above, along with payloads sent over the wire
+    :param bool certificate_verification: if False, will ignore SSL
+        certification verification (in ALL HTTPS calls, not just in this
+        library) for the lifetime of this process; intended for debugging
+        purposes only. (Included to work around SNI non-conformance issues
+        present in some versions of python)
     :param bool disable_binary_format: Whether to disable the binary
         inject/extract format (which relies on protobufs and may cause problems
         if other versions of protobufs are active in the same packaging
@@ -36,14 +51,6 @@ def init_tracer(**kwargs):
         enable_binary_format = not kwargs['disable_binary_format']
         del kwargs['disable_binary_format']
     return _LightstepTracer(enable_binary_format, Recorder(**kwargs))
-
-
-def init_debug_tracer():
-    """Returns a tracer that logs to the console instead of reporting to
-    LightStep."""
-    tracer = BasicTracer(LoggingRecorder())
-    tracer.register_required_propagators()
-    return tracer
 
 
 class _LightstepTracer(BasicTracer):
@@ -61,3 +68,9 @@ class _LightstepTracer(BasicTracer):
     def flush(self):
         """Force a flush of buffered Span data to the LightStep collector."""
         self.recorder.flush()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.flush()

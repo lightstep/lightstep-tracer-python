@@ -63,46 +63,24 @@ def lightstep_tracer_from_args():
                         type=int, default=443)
     parser.add_argument('--use_tls', help='Whether to use TLS for reporting',
                         type=bool, default=True)
-    parser.add_argument('--group-name', help='The LightStep runtime group',
-                        default='Python-Opentracing-Remote')
+    parser.add_argument('--component_name', help='The LightStep component name',
+                        default='TrivialExample')
     args = parser.parse_args()
 
-    if args.use_tls:
-	return lightstep.tracer.init_tracer(
-	    group_name=args.group_name,
-	    access_token=args.token,
-	    service_host=args.host,
-	    service_port=args.port)
-    else:
-	return lightstep.tracer.init_tracer(
-	    group_name=args.group_name,
-	    access_token=args.token,
-	    service_host=args.host,
-	    service_port=args.port,
-	    secure=False)
+    return lightstep.Tracer(
+            component_name=args.component_name,
+            access_token=args.token,
+            collector_host=args.host,
+            collector_port=args.port,
+            collector_encryption=('tls' if args.use_tls else 'none'))
 
 
 if __name__ == '__main__':
-    print 'Hello '
-
-    # Use opentracing's default no-op implementation
-    opentracing.tracer = opentracing.Tracer()
-    add_spans()
-
-    # Use LightStep's debug tracer, which logs to the console instead of
-    # reporting to LightStep.
-
-    tracer = lightstep.tracer.init_debug_tracer()
-    opentracing.tracer = tracer
-    add_spans()
+    print 'Hello ',
 
     # Use LightStep's opentracing implementation
-    tracer = lightstep_tracer_from_args()
-    opentracing.tracer = tracer
-
-    try:
+    with lightstep_tracer_from_args() as tracer:
+        opentracing.tracer = tracer
         add_spans()
-    finally:
-        tracer.flush()
 
-    print 'World!'
+    print ' World!'
