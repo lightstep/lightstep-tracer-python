@@ -9,7 +9,7 @@ var _ = require('underscore');
 var version = (fs.readFileSync("VERSION", "utf8") || "1.0.0").replace(/\s+$/, "");
 var newVersion = require("semver").inc(version, "patch");
 fs.writeFileSync("VERSION", newVersion);
-fs.writeFileSync("lightstep/version.py", "CRUNTIME_VERSION=\"" + newVersion + "\"\n");
+fs.writeFileSync("lightstep/version.py", "LIGHTSTEP_PYTHON_TRACER_VERSION=\"" + newVersion + "\"\n");
 
 // Naive micro-sed on setup.py
 var setuppy = _.map(fs.readFileSync("setup.py", "utf8").split("\n"), function(line) {
