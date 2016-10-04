@@ -99,14 +99,13 @@ class Recorder(SpanRecorder):
         atexit.register(self.shutdown)
 
         self._periodic_flush_seconds = periodic_flush_seconds
+        self._flush_connection = conn._Connection(self._collector_url)
+        self._flush_connection.open()
         if self._periodic_flush_seconds <= 0:
             warnings.warn(
                 'Runtime(periodic_flush_seconds={0}) means we will never flush to lightstep unless explicitly requested.'.format(
                     self._periodic_flush_seconds))
-            self._flush_connection = None
         else:
-            self._flush_connection = conn._Connection(self._collector_url)
-            self._flush_connection.open()
             self._flush_thread = threading.Thread(target=self._flush_periodically,
                                                   name=constants.FLUSH_THREAD_NAME)
             self._flush_thread.daemon = True
