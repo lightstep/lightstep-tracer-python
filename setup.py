@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='lightstep',
-    version='3.0.0',
+    version='3.0.1',
     description='LightStep Python OpenTracing Implementation',
     long_description='',
     author='LightStep',
