@@ -51,3 +51,14 @@ def _merge_dicts(*dict_args):
             result.update(dictionary)
     return result if result else None
 
+def _coerce_str(str_or_unicode):
+    if isinstance(str_or_unicode, str):
+        return str_or_unicode
+    elif isinstance(str_or_unicode, unicode):
+        return str_or_unicode.encode('utf-8', 'replace')
+    else:
+        try:
+            return str(str_or_unicode)
+        except Exception:
+            # Never let these errors bubble up
+            return '(encoding error)'

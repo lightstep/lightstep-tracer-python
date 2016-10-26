@@ -76,13 +76,13 @@ class Recorder(SpanRecorder):
             'lightstep.guid': util._id_to_hex(self.guid),
             })
         # Convert tracer_tags to a list of KeyValue pairs.
-        runtime_attrs = [ttypes.KeyValue(k, str(v)) for (k, v) in tracer_tags.iteritems()]
+        runtime_attrs = [ttypes.KeyValue(k, util._coerce_str(v)) for (k, v) in tracer_tags.iteritems()]
 
         # Thrift is picky about the types being correct, so we're explicit here
         self._runtime = ttypes.Runtime(
                 util._id_to_hex(self.guid),
                 long(timestamp),
-                str(component_name),
+                util._coerce_str(component_name),
                 runtime_attrs)
         self._finest("Initialized with Tracer runtime: %s", (self._runtime,))
         secure = collector_encryption != 'none'  # the default is 'tls'
@@ -141,7 +141,7 @@ class Recorder(SpanRecorder):
             trace_guid=util._id_to_hex(span.context.trace_id),
             span_guid=util._id_to_hex(span.context.span_id),
             runtime_guid=util._id_to_hex(self.guid),
-            span_name=str(span.operation_name),
+            span_name=util._coerce_str(span.operation_name),
             join_ids=[],
             oldest_micros=long(util._time_to_micros(span.start_time)),
             youngest_micros=long(util._time_to_micros(span.start_time + span.duration)),
@@ -157,9 +157,9 @@ class Recorder(SpanRecorder):
         if span.tags:
             for key in span.tags:
                 if key[:len(constants.JOIN_ID_TAG_PREFIX)] == constants.JOIN_ID_TAG_PREFIX:
-                    span_record.join_ids.append(ttypes.TraceJoinId(key, str(span.tags[key])))
+                    span_record.join_ids.append(ttypes.TraceJoinId(key, util._coerce_str(span.tags[key])))
                 else:
-                    span_record.attributes.append(ttypes.KeyValue(key, str(span.tags[key])))
+                    span_record.attributes.append(ttypes.KeyValue(key, util._coerce_str(span.tags[key])))
 
         for log in span.logs:
             event = log.key_values.get('event') or ''
