@@ -26,6 +26,7 @@ def add_spans():
         parent_span.log_kv({'foo': 'bar'})
         parent_span.set_tag('span_type', 'parent')
         parent_span.set_tag('int_tag', 5)
+        parent_span.set_tag('unicode_val', u'non-ascii: \u200b')
         parent_span.set_tag('bool_tag', True)
         parent_span.set_baggage_item('checked', 'baggage')
         sleep_dot()
@@ -72,6 +73,7 @@ def lightstep_tracer_from_args():
             access_token=args.token,
             collector_host=args.host,
             collector_port=args.port,
+            verbosity=1,
             collector_encryption=('tls' if args.use_tls else 'none'))
 
 
