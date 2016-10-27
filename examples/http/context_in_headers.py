@@ -43,9 +43,9 @@ def before_sending_request(request):
     if host:
         span.set_tag(opentracing.ext.tags.PEER_HOST_IPV4, host)
 
-    text_carrier = {}
-    span.tracer.inject(span.context, opentracing.Format.TEXT_MAP, text_carrier)
-    for k, v in text_carrier.iteritems():
+    carrier_dict = {}
+    span.tracer.inject(span.context, opentracing.Format.HTTP_HEADERS, carrier_dict)
+    for k, v in carrier_dict.iteritems():
         request.add_header(k, v)
     return span
 
@@ -54,10 +54,10 @@ def before_answering_request(handler, tracer):
     """Context manager creates a Span, using SpanContext encoded in handler if possible.
     """
     operation = 'handle_request:' + handler.path
-    text_carrier = {}
+    carrier_dict = {}
     for k, v in handler.headers.items():
-        text_carrier[k] = v
-    extracted_context = tracer.extract(opentracing.Format.TEXT_MAP, text_carrier)
+        carrier_dict[k] = v
+    extracted_context = tracer.extract(opentracing.Format.HTTP_HEADERS, carrier_dict)
 
     span = None
     if extracted_context:
