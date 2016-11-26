@@ -99,13 +99,29 @@ class Recorder(SpanRecorder):
         atexit.register(self.shutdown)
 
         self._periodic_flush_seconds = periodic_flush_seconds
-        self._flush_connection = conn._Connection(self._collector_url)
-        self._flush_connection.open()
+        # _flush_connection and _flush_thread are created lazily since some
+        # Python environments (e.g., Tornado) fork() initially and mess up the
+        # reporting machinery up otherwise.
+        self._flush_connection = None
+        self._flush_thread = None
         if self._periodic_flush_seconds <= 0:
             warnings.warn(
                 'Runtime(periodic_flush_seconds={0}) means we will never flush to lightstep unless explicitly requested.'.format(
                     self._periodic_flush_seconds))
-        else:
+
+    def _maybe_init_flush_thread(self):
+        """Start a periodic flush mechanism for this recorder if:
+
+        1. periodic_flush_seconds > 0, and 
+        2. self._flush_thread is None, indicating that we have not yet
+           initialized the background flush thread.
+
+        We do these things lazily because things like `tornado` break if the
+        background flush thread starts before `fork()` calls happen.
+        """
+        if (self._periodic_flush_seconds > 0) and (self._flush_thread is None):
+            self._flush_connection = conn._Connection(self._collector_url)
+            self._flush_connection.open()
             self._flush_thread = threading.Thread(target=self._flush_periodically,
                                                   name=constants.FLUSH_THREAD_NAME)
             self._flush_thread.daemon = True
@@ -126,6 +142,9 @@ class Recorder(SpanRecorder):
         """
         if self._disabled_runtime:
             return
+
+        # Lazy-init the flush loop (if need be).
+        self._maybe_init_flush_thread()
 
         # Checking the len() here *could* result in a span getting dropped that
         # might have fit if a report started before the append(). This would only
@@ -195,6 +214,7 @@ class Recorder(SpanRecorder):
         if connection is not None:
             return self._flush_worker(connection)
         else:
+            self._maybe_init_flush_thread()
             return self._flush_worker(self._flush_connection)
 
     def shutdown(self, flush=True):
