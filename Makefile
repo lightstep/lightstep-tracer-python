@@ -57,5 +57,6 @@ test: build
 # the command is run within the LightStep development environment (i.e. the
 # LIGHTSTEP_HOME environment variable is set).
 thrift:
-	thrift -r -gen py -out lightstep/ $(LIGHTSTEP_HOME)/go/src/crouton/crouton.thrift
-	rm lightstep/crouton/ReportingService-remote
+	docker run -v "$(PWD)/lightstep:/out" -v "$(LIGHTSTEP_HOME)/go/src/crouton:/data" --rm thrift:0.9.2 \
+		thrift -r --gen py -out /out /data/crouton.thrift
+	rm -rf lightstep/crouton/ReportingService-remote
