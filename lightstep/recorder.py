@@ -187,10 +187,13 @@ class Recorder(SpanRecorder):
                 if sys.getsizeof(event) > constants.MAX_LOG_MEMORY:
                     event = event[:constants.MAX_LOG_LEN]
             payload = log.key_values.get('payload')
+            fields = None
+            if log.key_values is not None and len(log.key_values) > 0:
+                fields = [ttypes.KeyValue(k, util._coerce_str(v)) for (k, v) in log.key_values.iteritems()]
+
             span_record.log_records.append(ttypes.LogRecord(
                 timestamp_micros=long(util._time_to_micros(log.timestamp)),
-                stable_name=event,
-                payload_json=payload))
+                fields=fields))
 
         with self._mutex:
             if len(self._span_records) < self._max_span_records:
