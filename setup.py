@@ -9,9 +9,9 @@ setup(
     license='',
     install_requires=['thrift==0.9.2',
                       'jsonpickle',
-                      'pytest',
                       'basictracer>=2.2,<2.3'],
-    tests_require=['sphinx',
+    tests_require=['pytest',
+                   'sphinx',
                    'sphinx-epytext'],
 
     classifiers=[
