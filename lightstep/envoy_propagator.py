@@ -1,14 +1,13 @@
 from __future__ import absolute_import
 
-import struct
+from base64 import b64encode
+from base64 import b64decode
 from basictracer.context import SpanContext
 from basictracer.propagator import Propagator
 # This can cause problems when old versions of protobuf are installed
 from opentracing import InvalidCarrierException
 
 from lightstep.envoy_carrier_pb2 import EnvoyCarrier
-
-_proto_size_bytes = 4  # bytes
 
 
 class EnvoyPropagator(Propagator):
@@ -25,15 +24,15 @@ class EnvoyPropagator(Propagator):
             for key in span_context.baggage:
                 state.baggage_items[key] = span_context.baggage[key]
 
-        # The binary format is {uint32}{protobuf} using big-endian for the uint
-        carrier.extend(struct.pack('>I', state.ByteSize()))
-        carrier.extend(state.SerializeToString())
+        serializedProto = state.SerializeToString()
+        carrier.extend(b64encode(serializedProto))
 
     def extract(self, carrier):
         if type(carrier) is not bytearray:
             raise InvalidCarrierException()
+        serializedProto = b64decode(carrier)
         state = EnvoyCarrier()
-        state.ParseFromString(str(carrier[_proto_size_bytes:]))
+        state.ParseFromString(str(serializedProto))
         baggage = {}
         for k in state.baggage_items:
             baggage[k] = state.baggage_items[k]
