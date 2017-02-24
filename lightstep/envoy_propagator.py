@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
-from base64 import b64encode
-from base64 import b64decode
+from base64 import standard_b64decode
+from base64 import standard_b64encode
 from basictracer.context import SpanContext
 from basictracer.propagator import Propagator
 # This can cause problems when old versions of protobuf are installed
@@ -25,12 +25,12 @@ class EnvoyPropagator(Propagator):
                 state.baggage_items[key] = span_context.baggage[key]
 
         serializedProto = state.SerializeToString()
-        carrier.extend(b64encode(serializedProto))
+        carrier.extend(standard_b64encode(serializedProto))
 
     def extract(self, carrier):
         if type(carrier) is not bytearray:
             raise InvalidCarrierException()
-        serializedProto = b64decode(carrier)
+        serializedProto = standard_b64decode(carrier)
         state = EnvoyCarrier()
         state.ParseFromString(str(serializedProto))
         baggage = {}
