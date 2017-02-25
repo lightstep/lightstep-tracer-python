@@ -12,7 +12,7 @@ from basictracer import BasicTracer
 from basictracer.text_propagator import TextPropagator
 from opentracing import Format
 
-from lightstep.envoy_propagator import EnvoyPropagator
+from lightstep.lightstep_binary_propagator import LightStepBinaryPropagator
 from lightstep.propagation import LightStepFormat
 from .recorder import Recorder
 
@@ -66,7 +66,7 @@ class _LightstepTracer(BasicTracer):
             # can cause process-level failure at import time.
             from basictracer.binary_propagator import BinaryPropagator
             self.register_propagator(Format.BINARY, BinaryPropagator())
-            self.register_propagator(LightStepFormat.ENVOY_HEADERS, EnvoyPropagator())
+            self.register_propagator(LightStepFormat.LIGHTSTEP_BINARY, LightStepBinaryPropagator())
 
     def flush(self):
         """Force a flush of buffered Span data to the LightStep collector."""

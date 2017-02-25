@@ -11,10 +11,10 @@ class LightStepFormat(object):
     These static constants are intended for use in the Tracer.inject() and
     Tracer.extract() methods. E.g.,
 
-        tracer.inject(span.context, Format.ENVOY_HEADERS, envoy_carrier)
+        tracer.inject(span.context, LightStepFormat.LIGHTSTEP_BINARY, lightstep_carrier)
 
     """
 
-    # The ENVOY_HEADERS format represents SpanContexts in byte array format.
-    # https://github.com/opentracing/basictracer-go/blob/master/wire/wire.proto
-    ENVOY_HEADERS = 'envoy'
+    # The LIGHTSTEP_BINARY format represents SpanContexts in byte array format.
+    # https://github.com/lightstep/lightstep-tracer-common/lightstep_carrier.proto
+    LIGHTSTEP_BINARY = 'lightstep_binary'
