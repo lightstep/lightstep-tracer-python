@@ -31,7 +31,6 @@ class LightStepBinaryPropagator(Propagator):
 
         serializedProto = state.SerializeToString()
         encoded = standard_b64encode(serializedProto)
-        print encoded
         carrier.extend(encoded)
 
     def extract(self, carrier):
