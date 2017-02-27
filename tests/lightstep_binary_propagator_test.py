@@ -32,7 +32,7 @@ class LightStepBinaryPropagatorTest(unittest.TestCase):
     def testExtractionOfKnownInput(self):
         # TODO: This test is failing and I don't understand why
         # Test extraction of a well - known input, for validation with other libraries.
-        input = "ETo4qBGmBwYHGTZon1Du/8ZYIAEqEgoHY2hlY2tlZBIHYmFnZ2FnZQ=="
+        input = "EigJOjioEaYHBgcRNmifUO7/xlgYASISCgdjaGVja2VkEgdiYWdnYWdl"
         result = self.tracer().extract(LightStepFormat.LIGHTSTEP_BINARY, bytearray(input))
         self.assertEqual(6397081719746291766L, result.span_id)
         self.assertEqual(506100417967962170L, result.trace_id)
