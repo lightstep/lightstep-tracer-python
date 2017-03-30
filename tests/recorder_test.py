@@ -1,9 +1,5 @@
-import json
 import time
 import unittest
-import warnings
-
-import jsonpickle
 
 import lightstep.constants
 import lightstep.recorder

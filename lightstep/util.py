@@ -2,7 +2,8 @@
 """
 import random
 import time
-import constants
+import math
+from . import constants
 
 guid_rng = random.Random()   # Uses urandom seed
 
@@ -37,7 +38,7 @@ def _time_to_micros(t):
     """
     Convert a time.time()-style timestamp to microseconds.
     """
-    return long(round(t * constants.SECONDS_TO_MICRO))
+    return math.floor(round(t * constants.SECONDS_TO_MICRO))
 
 def _merge_dicts(*dict_args):
     """Destructively merges dictionaries, returns None instead of an empty dictionary.
@@ -54,11 +55,12 @@ def _merge_dicts(*dict_args):
 def _coerce_str(str_or_unicode):
     if isinstance(str_or_unicode, str):
         return str_or_unicode
-    elif isinstance(str_or_unicode, unicode):
-        return str_or_unicode.encode('utf-8', 'replace')
     else:
         try:
-            return str(str_or_unicode)
+            return str_or_unicode.encode('utf-8', 'replace')
         except Exception:
-            # Never let these errors bubble up
-            return '(encoding error)'
+            try:
+                return str(str_or_unicode)
+            except Exception:
+                # Never let these errors bubble up
+                return '(encoding error)'

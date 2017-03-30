@@ -1,6 +1,5 @@
 import unittest
 
-import opentracing
 from opentracing.harness.api_check import APICompatibilityCheckMixin
 
 import lightstep.tracer
