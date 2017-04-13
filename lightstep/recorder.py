@@ -228,6 +228,7 @@ class Recorder(SpanRecorder):
 
         Returns whether the data was successfully flushed.
         """
+        print "SHUTDOWN"
         # Closing connection twice results in an error. Exit early
         # if runtime has already been disabled.
         if self._disabled_runtime:
