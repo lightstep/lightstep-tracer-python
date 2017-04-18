@@ -9,6 +9,7 @@ from basictracer.span import BasicSpan
 from basictracer.context import SpanContext
 
 from lightstep.crouton import ttypes
+import six
 
 class MockConnection(object):
     """MockConnection is used to debug and test Runtime.
@@ -125,7 +126,8 @@ class RecorderTest(unittest.TestCase):
         """Checks spans' name.
         """
         for i, span in enumerate(spans):
-            self.assertEqual(span.span_name, str(i))
+            name = six.b(str(i)) # name *must* be in bytes/utf-8
+            self.assertEqual(span.span_name, name)
 
     def dummy_basic_span(self, recorder, i):
         return BasicSpan(

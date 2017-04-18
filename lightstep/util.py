@@ -53,14 +53,14 @@ def _merge_dicts(*dict_args):
     return result if result else None
 
 def _coerce_str(str_or_unicode):
-    if isinstance(str_or_unicode, str):
+    if isinstance(str_or_unicode, bytes):
         return str_or_unicode
     else:
         try:
             return str_or_unicode.encode('utf-8', 'replace')
         except Exception:
             try:
-                return str(str_or_unicode)
+                return bytes(str_or_unicode)
             except Exception:
                 # Never let these errors bubble up
                 return '(encoding error)'

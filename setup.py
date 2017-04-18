@@ -9,6 +9,7 @@ setup(
     license='',
     install_requires=['thrift==0.9.2',
                       'jsonpickle',
+                      'six',
                       'basictracer>=2.2,<2.3'],
     tests_require=['pytest',
                    'sphinx',
