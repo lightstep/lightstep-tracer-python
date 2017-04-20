@@ -126,8 +126,7 @@ class RecorderTest(unittest.TestCase):
         """Checks spans' name.
         """
         for i, span in enumerate(spans):
-            name = six.b(str(i)) # name *must* be in bytes/utf-8
-            self.assertEqual(span.span_name, name)
+            self.assertEqual(span.span_name, str(i))
 
     def dummy_basic_span(self, recorder, i):
         return BasicSpan(

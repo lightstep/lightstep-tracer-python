@@ -6,10 +6,12 @@
 #  options string: py
 #
 
+from __future__ import absolute_import
 from .ttypes import *
 from thrift.Thrift import TProcessor
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol, TProtocol
+import six
 try:
   from thrift.protocol import fastbinary
 except:
@@ -173,7 +175,7 @@ class Report_args:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -238,7 +240,7 @@ class Report_result:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):

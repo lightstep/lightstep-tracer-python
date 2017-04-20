@@ -6,10 +6,13 @@
 #  options string: py
 #
 
+from __future__ import absolute_import
 from thrift.Thrift import TType, TMessageType, TException, TApplicationException
 
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol, TProtocol
+import six
+from six.moves import range
 try:
   from thrift.protocol import fastbinary
 except:
@@ -90,7 +93,7 @@ class KeyValue:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -172,7 +175,7 @@ class NamedCounter:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -232,7 +235,7 @@ class Runtime:
         if ftype == TType.LIST:
           self.attrs = []
           (_etype3, _size0) = iprot.readListBegin()
-          for _i4 in xrange(_size0):
+          for _i4 in range(_size0):
             _elem5 = KeyValue()
             _elem5.read(iprot)
             self.attrs.append(_elem5)
@@ -285,7 +288,7 @@ class Runtime:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -362,7 +365,7 @@ class LogRecord:
         if ftype == TType.LIST:
           self.fields = []
           (_etype10, _size7) = iprot.readListBegin()
-          for _i11 in xrange(_size7):
+          for _i11 in range(_size7):
             _elem12 = KeyValue()
             _elem12.read(iprot)
             self.fields.append(_elem12)
@@ -413,7 +416,7 @@ class LogRecord:
         if ftype == TType.LIST:
           self.stack_frames = []
           (_etype16, _size13) = iprot.readListBegin()
-          for _i17 in xrange(_size13):
+          for _i17 in range(_size13):
             _elem18 = iprot.readString();
             self.stack_frames.append(_elem18)
           iprot.readListEnd()
@@ -523,7 +526,7 @@ class LogRecord:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -605,7 +608,7 @@ class TraceJoinId:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -689,7 +692,7 @@ class SpanRecord:
         if ftype == TType.LIST:
           self.join_ids = []
           (_etype24, _size21) = iprot.readListBegin()
-          for _i25 in xrange(_size21):
+          for _i25 in range(_size21):
             _elem26 = TraceJoinId()
             _elem26.read(iprot)
             self.join_ids.append(_elem26)
@@ -710,7 +713,7 @@ class SpanRecord:
         if ftype == TType.LIST:
           self.attributes = []
           (_etype30, _size27) = iprot.readListBegin()
-          for _i31 in xrange(_size27):
+          for _i31 in range(_size27):
             _elem32 = KeyValue()
             _elem32.read(iprot)
             self.attributes.append(_elem32)
@@ -726,7 +729,7 @@ class SpanRecord:
         if ftype == TType.LIST:
           self.log_records = []
           (_etype36, _size33) = iprot.readListBegin()
-          for _i37 in xrange(_size33):
+          for _i37 in range(_size33):
             _elem38 = LogRecord()
             _elem38.read(iprot)
             self.log_records.append(_elem38)
@@ -815,7 +818,7 @@ class SpanRecord:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -880,7 +883,7 @@ class Auth:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -958,7 +961,7 @@ class Timing:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -1049,7 +1052,7 @@ class SampleCount:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -1142,7 +1145,7 @@ class MetricsSample:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -1181,7 +1184,7 @@ class Metrics:
         if ftype == TType.LIST:
           self.counts = []
           (_etype45, _size42) = iprot.readListBegin()
-          for _i46 in xrange(_size42):
+          for _i46 in range(_size42):
             _elem47 = MetricsSample()
             _elem47.read(iprot)
             self.counts.append(_elem47)
@@ -1192,7 +1195,7 @@ class Metrics:
         if ftype == TType.LIST:
           self.gauges = []
           (_etype51, _size48) = iprot.readListBegin()
-          for _i52 in xrange(_size48):
+          for _i52 in range(_size48):
             _elem53 = MetricsSample()
             _elem53.read(iprot)
             self.gauges.append(_elem53)
@@ -1238,7 +1241,7 @@ class Metrics:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -1306,7 +1309,7 @@ class ReportRequest:
         if ftype == TType.LIST:
           self.span_records = []
           (_etype59, _size56) = iprot.readListBegin()
-          for _i60 in xrange(_size56):
+          for _i60 in range(_size56):
             _elem61 = SpanRecord()
             _elem61.read(iprot)
             self.span_records.append(_elem61)
@@ -1317,7 +1320,7 @@ class ReportRequest:
         if ftype == TType.LIST:
           self.log_records = []
           (_etype65, _size62) = iprot.readListBegin()
-          for _i66 in xrange(_size62):
+          for _i66 in range(_size62):
             _elem67 = LogRecord()
             _elem67.read(iprot)
             self.log_records.append(_elem67)
@@ -1343,7 +1346,7 @@ class ReportRequest:
         if ftype == TType.LIST:
           self.counters = []
           (_etype71, _size68) = iprot.readListBegin()
-          for _i72 in xrange(_size68):
+          for _i72 in range(_size68):
             _elem73 = NamedCounter()
             _elem73.read(iprot)
             self.counters.append(_elem73)
@@ -1354,7 +1357,7 @@ class ReportRequest:
         if ftype == TType.LIST:
           self.internal_logs = []
           (_etype77, _size74) = iprot.readListBegin()
-          for _i78 in xrange(_size74):
+          for _i78 in range(_size74):
             _elem79 = LogRecord()
             _elem79.read(iprot)
             self.internal_logs.append(_elem79)
@@ -1447,7 +1450,7 @@ class ReportRequest:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -1512,7 +1515,7 @@ class Command:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):
@@ -1554,7 +1557,7 @@ class ReportResponse:
         if ftype == TType.LIST:
           self.commands = []
           (_etype87, _size84) = iprot.readListBegin()
-          for _i88 in xrange(_size84):
+          for _i88 in range(_size84):
             _elem89 = Command()
             _elem89.read(iprot)
             self.commands.append(_elem89)
@@ -1571,7 +1574,7 @@ class ReportResponse:
         if ftype == TType.LIST:
           self.errors = []
           (_etype93, _size90) = iprot.readListBegin()
-          for _i94 in xrange(_size90):
+          for _i94 in range(_size90):
             _elem95 = iprot.readString();
             self.errors.append(_elem95)
           iprot.readListEnd()
@@ -1621,7 +1624,7 @@ class ReportResponse:
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
+      for key, value in six.iteritems(self.__dict__)]
     return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
 
   def __eq__(self, other):

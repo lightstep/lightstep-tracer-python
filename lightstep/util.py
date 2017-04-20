@@ -1,6 +1,7 @@
 """ Utility functions
 """
 import random
+import sys
 import time
 import math
 from . import constants
@@ -52,15 +53,38 @@ def _merge_dicts(*dict_args):
             result.update(dictionary)
     return result if result else None
 
-def _coerce_str(str_or_unicode):
-    if isinstance(str_or_unicode, bytes):
-        return str_or_unicode
-    else:
+if sys.version_info[0] == 2:
+
+    # Coerce to ascii (bytes) under Python 2.
+    def _coerce_str(val):
+        return _coerce_to_bytes(val)
+else:
+
+    # Coerce to utf-8 under Python 3.
+    def _coerce_str(val):
+        return _coerce_to_unicode(val)
+
+def _coerce_to_bytes(val):
+    if isinstance(val, bytes):
+        return val
+    try:
+        return val.encode('utf-8', 'replace')
+    except Exception:
         try:
-            return str_or_unicode.encode('utf-8', 'replace')
+            return bytes(val)
         except Exception:
-            try:
-                return bytes(str_or_unicode)
-            except Exception:
-                # Never let these errors bubble up
-                return '(encoding error)'
+            # Never let these errors bubble up
+            return '(encoding error)'
+
+def _coerce_to_unicode(val):
+    if isinstance(val, str):
+        return val
+    try:
+        return val.decode('utf-8')
+    except Exception:
+        try:
+            return str(val)
+        except Exception:
+            # Never let these errors bubble up
+            return '(encoding error)'
+
