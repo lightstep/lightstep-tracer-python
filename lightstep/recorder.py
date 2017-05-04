@@ -64,14 +64,14 @@ class Recorder(SpanRecorder):
         python_version = '.'.join(map(str, sys.version_info[0:3]))
         if tags is None:
             tags = {}
-        tracer_tags = tags.copy()
-        tracer_tags.update({
+        tracer_tags = {
             'lightstep.tracer_platform': 'python',
             'lightstep.tracer_platform_version': python_version,
             'lightstep.tracer_version': tracer_version.LIGHTSTEP_PYTHON_TRACER_VERSION,
             'lightstep.component_name': component_name,
             'lightstep.guid': util._id_to_hex(self.guid),
-            })
+        }
+        tracer_tags.update(tags)
         # Convert tracer_tags to a list of KeyValue pairs.
         runtime_attrs = [ttypes.KeyValue(k, util._coerce_str(v)) for (k, v) in tracer_tags.items()]
 
@@ -93,7 +93,7 @@ class Recorder(SpanRecorder):
         self._max_span_records = max_span_records
 
         self._disabled_runtime = False
-        
+
         atexit.register(self.shutdown)
 
         self._periodic_flush_seconds = periodic_flush_seconds
@@ -110,7 +110,7 @@ class Recorder(SpanRecorder):
     def _maybe_init_flush_thread(self):
         """Start a periodic flush mechanism for this recorder if:
 
-        1. periodic_flush_seconds > 0, and 
+        1. periodic_flush_seconds > 0, and
         2. self._flush_thread is None, indicating that we have not yet
            initialized the background flush thread.
 
