@@ -93,7 +93,7 @@ class Recorder(SpanRecorder):
         self._max_span_records = max_span_records
 
         self._disabled_runtime = False
-        
+
         atexit.register(self.shutdown)
 
         self._periodic_flush_seconds = periodic_flush_seconds
@@ -110,7 +110,7 @@ class Recorder(SpanRecorder):
     def _maybe_init_flush_thread(self):
         """Start a periodic flush mechanism for this recorder if:
 
-        1. periodic_flush_seconds > 0, and 
+        1. periodic_flush_seconds > 0, and
         2. self._flush_thread is None, indicating that we have not yet
            initialized the background flush thread.
 
@@ -289,7 +289,7 @@ class Recorder(SpanRecorder):
         except Exception as e:
             self._fine(
                     "Caught exception during report: {0}, stack trace: {1}",
-                    (e, traceback.format_exc(e)))
+                    (e, traceback.format_exc()))
             self._restore_spans(report_request.span_records)
             return False
 
