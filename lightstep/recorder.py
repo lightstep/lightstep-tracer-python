@@ -127,12 +127,12 @@ class Recorder(SpanRecorder):
 
     def _fine(self, fmt, args):
         if self.verbosity >= 1:
-            fmt_args = fmt.format(args)
+            fmt_args = fmt.format(*args)
             print("[LightStep Tracer]: ", fmt_args)
 
     def _finest(self, fmt, args):
         if self.verbosity >= 2:
-            fmt_args = fmt.format(args)
+            fmt_args = fmt.format(*args)
             print("[LightStep Tracer]: ", fmt_args)
 
     def record_span(self, span):
@@ -289,7 +289,7 @@ class Recorder(SpanRecorder):
         except Exception as e:
             self._fine(
                     "Caught exception during report: {0}, stack trace: {1}",
-                    (e, traceback.format_exc(e)))
+                    (e, traceback.format_exc()))
             self._restore_spans(report_request.span_records)
             return False
 
