@@ -19,6 +19,15 @@ class LightStepTracerOpenTracingCompatibility(unittest.TestCase, APICompatibilit
     def tracer(self):
         return self._tracer
 
+    def is_parent(self, parent, span):
+        if span is None:
+            return False
+
+        if parent is None:
+            return span.parent_id is None
+
+        return parent.context.span_id == span.parent_id
+
     def tearDown(self):
         self._tracer.flush()
 
