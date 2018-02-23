@@ -2,18 +2,18 @@ from setuptools import setup, find_packages
 
 setup(
     name='lightstep',
-    version='3.0.6',
+    version='3.0.11',
     description='LightStep Python OpenTracing Implementation',
     long_description='',
     author='LightStep',
     license='',
-    install_requires=['thrift==0.9.2',
+    install_requires=['thrift==0.10.0',
                       'jsonpickle',
+                      'six',
                       'basictracer==3.0.0rc1'],
     tests_require=['pytest',
                    'sphinx',
                    'sphinx-epytext'],
-
     classifiers=[
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',

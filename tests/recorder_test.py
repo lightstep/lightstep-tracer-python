@@ -1,9 +1,5 @@
-import json
 import time
 import unittest
-import warnings
-
-import jsonpickle
 
 import lightstep.constants
 import lightstep.recorder
@@ -13,6 +9,7 @@ from basictracer.span import BasicSpan
 from basictracer.context import SpanContext
 
 from lightstep.crouton import ttypes
+import six
 
 class MockConnection(object):
     """MockConnection is used to debug and test Runtime.

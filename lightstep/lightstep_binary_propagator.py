@@ -38,7 +38,7 @@ class LightStepBinaryPropagator(Propagator):
             raise InvalidCarrierException()
         serializedProto = standard_b64decode(carrier)
         state = BinaryCarrier()
-        state.ParseFromString(str(serializedProto))
+        state.ParseFromString(bytes(serializedProto))
         baggage = {}
         for k in state.basic_ctx.baggage_items:
             baggage[k] = state.basic_ctx.baggage_items[k]

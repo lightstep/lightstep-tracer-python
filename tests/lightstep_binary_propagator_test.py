@@ -32,9 +32,9 @@ class LightStepBinaryPropagatorTest(unittest.TestCase):
     def testExtractionOfKnownInput(self):
         # Test extraction of a well - known input, for validation with other libraries.
         input = "EigJOjioEaYHBgcRNmifUO7/xlgYASISCgdjaGVja2VkEgdiYWdnYWdl"
-        result = self.tracer().extract(LightStepFormat.LIGHTSTEP_BINARY, bytearray(input))
-        self.assertEqual(6397081719746291766L, result.span_id)
-        self.assertEqual(506100417967962170L, result.trace_id)
+        result = self.tracer().extract(LightStepFormat.LIGHTSTEP_BINARY, bytearray(input, 'utf-8'))
+        self.assertEqual(6397081719746291766, result.span_id)
+        self.assertEqual(506100417967962170, result.trace_id)
         self.assertEqual(True, result.sampled)
         self.assertDictEqual(result.baggage, {"checked" : "baggage"})
 

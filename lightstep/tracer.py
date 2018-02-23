@@ -52,7 +52,7 @@ def Tracer(**kwargs):
         basictracer package, which uses thread-local storage.
     """
     enable_binary_format = True
-    if kwargs.has_key('disable_binary_format'):
+    if 'disable_binary_format' in kwargs:
         enable_binary_format = not kwargs['disable_binary_format']
         del kwargs['disable_binary_format']
 

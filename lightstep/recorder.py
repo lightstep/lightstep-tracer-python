@@ -6,13 +6,8 @@ https://github.com/opentracing/basictracer-python
 See the API definition for comments.
 """
 
-from socket import error as socket_error
-
 import atexit
-import contextlib
 import jsonpickle
-import logging
-import pprint
 import ssl
 import sys
 import threading
@@ -20,11 +15,13 @@ import time
 import traceback
 import warnings
 
-from thrift import Thrift
 from basictracer.recorder import SpanRecorder
 
 from .crouton import ttypes
-from . import constants, version as tracer_version, util, connection as conn
+from . import constants
+from . import version as tracer_version
+from . import util
+from . import connection as conn
 
 
 class Recorder(SpanRecorder):
@@ -50,7 +47,7 @@ class Recorder(SpanRecorder):
                  certificate_verification=True):
         self.verbosity = verbosity
         # Fail fast on a bad access token
-        if isinstance(access_token, basestring) == False:
+        if isinstance(access_token, str) == False:
             raise Exception('access_token must be a string')
 
         if certificate_verification is False:
@@ -76,15 +73,15 @@ class Recorder(SpanRecorder):
             'lightstep.guid': util._id_to_hex(self.guid),
             })
         # Convert tracer_tags to a list of KeyValue pairs.
-        runtime_attrs = [ttypes.KeyValue(k, util._coerce_str(v)) for (k, v) in tracer_tags.iteritems()]
+        runtime_attrs = [ttypes.KeyValue(k, util._coerce_str(v)) for (k, v) in tracer_tags.items()]
 
         # Thrift is picky about the types being correct, so we're explicit here
         self._runtime = ttypes.Runtime(
                 util._id_to_hex(self.guid),
-                long(timestamp),
+                timestamp,
                 util._coerce_str(component_name),
                 runtime_attrs)
-        self._finest("Initialized with Tracer runtime: %s", (self._runtime,))
+        self._finest("Initialized with Tracer runtime: {0}", (self._runtime,))
         secure = collector_encryption != 'none'  # the default is 'tls'
         self._collector_url = util._collector_url_from_hostport(
                 secure,
@@ -96,6 +93,7 @@ class Recorder(SpanRecorder):
         self._max_span_records = max_span_records
 
         self._disabled_runtime = False
+        
         atexit.register(self.shutdown)
 
         self._periodic_flush_seconds = periodic_flush_seconds
@@ -129,11 +127,13 @@ class Recorder(SpanRecorder):
 
     def _fine(self, fmt, args):
         if self.verbosity >= 1:
-            print "[LightStep Tracer]:", (fmt % args)
+            fmt_args = fmt.format(*args)
+            print("[LightStep Tracer]: ", fmt_args)
 
     def _finest(self, fmt, args):
         if self.verbosity >= 2:
-            print "[LightStep Tracer]:", (fmt % args)
+            fmt_args = fmt.format(*args)
+            print("[LightStep Tracer]: ", fmt_args)
 
     def record_span(self, span):
         """Per BasicSpan.record_span, safely add a span to the buffer.
@@ -162,8 +162,8 @@ class Recorder(SpanRecorder):
             runtime_guid=util._id_to_hex(self.guid),
             span_name=util._coerce_str(span.operation_name),
             join_ids=[],
-            oldest_micros=long(util._time_to_micros(span.start_time)),
-            youngest_micros=long(util._time_to_micros(span.start_time + span.duration)),
+            oldest_micros=util._time_to_micros(span.start_time),
+            youngest_micros=util._time_to_micros(span.start_time + span.duration),
             attributes=[],
             log_records=[]
         )
@@ -189,10 +189,10 @@ class Recorder(SpanRecorder):
             payload = log.key_values.get('payload')
             fields = None
             if log.key_values is not None and len(log.key_values) > 0:
-                fields = [ttypes.KeyValue(k, util._coerce_str(v)) for (k, v) in log.key_values.iteritems()]
+                fields = [ttypes.KeyValue(k, util._coerce_str(v)) for (k, v) in log.key_values.items()]
 
             span_record.log_records.append(ttypes.LogRecord(
-                timestamp_micros=long(util._time_to_micros(log.timestamp)),
+                timestamp_micros=util._time_to_micros(log.timestamp),
                 fields=fields))
 
         with self._mutex:
@@ -273,9 +273,9 @@ class Recorder(SpanRecorder):
 
         report_request = self._construct_report_request()
         try:
-            self._finest("Attempting to send report to collector: %s", (report_request,))
+            self._finest("Attempting to send report to collector: {0}", (report_request,))
             resp = connection.report(self._auth, report_request)
-            self._finest("Received response from collector: %s", (resp,))
+            self._finest("Received response from collector: {0}", (resp,))
 
             # The resp may be None on failed reports
             if resp is not None:
@@ -288,8 +288,8 @@ class Recorder(SpanRecorder):
 
         except Exception as e:
             self._fine(
-                    "Caught exception during report: %s, stack trace: %s",
-                    (e, traceback.format_exc(e)))
+                    "Caught exception during report: {0}, stack trace: {1}",
+                    (e, traceback.format_exc()))
             self._restore_spans(report_request.span_records)
             return False
 
