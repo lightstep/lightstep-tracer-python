@@ -10,7 +10,7 @@ setup(
     install_requires=['thrift==0.10.0',
                       'jsonpickle',
                       'six',
-                      'basictracer>=2.2,<2.3'],
+                      'basictracer==3.0.0rc1'],
     tests_require=['pytest',
                    'sphinx',
                    'sphinx-epytext'],

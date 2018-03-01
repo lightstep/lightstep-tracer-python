@@ -29,8 +29,8 @@ if __name__ == "__main__":
     component_name='your_microservice_name',
     access_token='{your_access_token}')
 
-  with opentracing.tracer.start_span('TestSpan') as span:
-    span.log_event('test message', payload={'life': 42})
+  with opentracing.tracer.start_active_span('TestSpan', True) as scope:
+    scope.span.log_event('test message', payload={'life': 42})
 
   opentracing.tracer.flush()
 ```
