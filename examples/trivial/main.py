@@ -79,11 +79,11 @@ def lightstep_tracer_from_args():
 
 
 if __name__ == '__main__':
-    print 'Hello ',
+    print('Hello ')
 
     # Use LightStep's opentracing implementation
     with lightstep_tracer_from_args() as tracer:
         opentracing.tracer = tracer
         add_spans()
 
-    print ' World!'
+    print(' World!')
