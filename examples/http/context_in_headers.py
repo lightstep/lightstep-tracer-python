@@ -10,9 +10,22 @@ import errno
 import socket
 import sys
 import threading
-import urllib2
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+try:
+    # For Python 3.0 and later
+    from urllib.request import (
+        Request,
+        urlopen,
+    )
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+except ImportError:
+    # Fall back to Python 2
+    from urllib2 import (
+        Request,
+        urlopen,
+    )
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
 
 import opentracing
 import opentracing.ext.tags
@@ -22,14 +35,15 @@ class RemoteHandler(BaseHTTPRequestHandler):
     """This handler receives the request from the client.
     """
     def do_GET(self):
-        with before_answering_request(self, opentracing.tracer) as server_span:
+        server_span = before_answering_request(self, opentracing.tracer)
+        with opentracing.tracer.scope_manager.activate(server_span, True):
 
             server_span.log_event('request received', self.path)
 
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write("Hello World!")
+            self.wfile.write("Hello World!".encode("utf-8"))
 
             server_span.log_event('prepared response', self.path)
 
@@ -39,13 +53,19 @@ def before_sending_request(request):
     """
     span = opentracing.tracer.start_span('Sending request')
     span.set_tag('server.http.url', request.get_full_url())
-    host = request.get_host()
+    try:
+        # Python 2
+        host = request.get_host()
+    except:
+        # Python 3
+        host = request.host
+
     if host:
         span.set_tag(opentracing.ext.tags.PEER_HOST_IPV4, host)
 
     carrier_dict = {}
     span.tracer.inject(span.context, opentracing.Format.HTTP_HEADERS, carrier_dict)
-    for k, v in carrier_dict.iteritems():
+    for k, v in carrier_dict.items():
         request.add_header(k, v)
     return span
 
@@ -65,13 +85,13 @@ def before_answering_request(handler, tracer):
                 operation_name=operation,
                 child_of=extracted_context)
     else:
-        print 'ERROR: Context missing, starting new trace'
+        print('ERROR: Context missing, starting new trace')
         global _exit_code
         _exit_code = errno.ENOMSG
         span = tracer.start_span(operation_name=operation)
         headers = ', '.join({k + '=' + v for k, v in handler.headers.items()})
         span.log_event('extract_failed', headers)
-        print 'Could not extract context from http headers: ' + headers
+        print('Could not extract context from http headers: ' + headers)
 
     host, port = handler.client_address
     if host:
@@ -131,16 +151,17 @@ if __name__ == '__main__':
             # Run the server in a separate thread.
             server_thread = threading.Thread(target=server.serve_forever)
             server_thread.start()
-            print 'Started httpserver on port ', port_number
+            print('Started httpserver on port ', port_number)
 
             # Prepare request in the client
             url = 'http://localhost:{}'.format(port_number)
-            request = urllib2.Request(url)
-            with before_sending_request(request) as client_span:
+            request = Request(url)
+            client_span = before_sending_request(request)
+            with opentracing.tracer.scope_manager.activate(client_span, True):
                 client_span.log_event('sending request', url)
 
                 # Send request to server
-                response = urllib2.urlopen(request)
+                response = urlopen(request)
 
                 response_body = response.read()
                 client_span.log_event('server returned', {
@@ -148,7 +169,7 @@ if __name__ == '__main__':
                     "body": response_body,
                 })
 
-            print 'Server returned ' + str(response.code) + ': ' + response_body
+            print('Server returned ' + str(response.code) + ': ' + str(response_body))
 
             sys.exit(_exit_code)
 

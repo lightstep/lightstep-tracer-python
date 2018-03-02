@@ -19,37 +19,38 @@ def sleep_dot():
 def add_spans():
     """Calls the opentracing API, doesn't use any LightStep-specific code.
     """
-    with opentracing.tracer.start_span(operation_name='trivial/initial_request') as parent_span:
-        parent_span.set_tag('url', 'localhost')
+    with opentracing.tracer.start_active_span('trivial/initial_request', True) as parent_scope:
+        parent_scope.span.set_tag('url', 'localhost')
         sleep_dot()
-        parent_span.log_event('All good here!', payload={'N': 42, 'pi': 3.14, 'abc': 'xyz'})
-        parent_span.log_kv({'foo': 'bar', 'int': 42, 'float': 4.2, 'bool': True, 'obj': {'blargh': 'hmm', 'whee': 4324}})
-        parent_span.set_tag('span_type', 'parent')
-        parent_span.set_tag('int_tag', 5)
-        parent_span.set_tag('unicode_val', u'non-ascii: \u200b')
-        parent_span.set_tag('bool_tag', True)
-        parent_span.set_baggage_item('checked', 'baggage')
+        parent_scope.span.log_event('All good here!', payload={'N': 42, 'pi': 3.14, 'abc': 'xyz'})
+        parent_scope.span.log_kv({'foo': 'bar', 'int': 42, 'float': 4.2, 'bool': True, 'obj': {'blargh': 'hmm', 'whee': 4324}})
+        parent_scope.span.set_tag('span_type', 'parent')
+        parent_scope.span.set_tag('int_tag', 5)
+        parent_scope.span.set_tag('unicode_val', u'non-ascii: \u200b')
+        parent_scope.span.set_tag('bool_tag', True)
+        parent_scope.span.set_baggage_item('checked', 'baggage')
         sleep_dot()
 
         # This is how you would represent starting work locally.
-        with opentracing.start_child_span(parent_span, operation_name='trivial/child_request') as child_span:
-            child_span.set_tag('span_type', 'child')
+        with opentracing.tracer.start_active_span('trivial/child_request', True) as child_scope:
+            child_scope.span.set_tag('span_type', 'child')
             # Pretend there was an error
-            child_span.set_tag('error', True)
-            child_span.log_event('Uh Oh!', payload={'stacktrace': traceback.extract_stack()})
+            child_scope.span.set_tag('error', True)
+            child_scope.span.log_event('Uh Oh!', payload={'stacktrace': traceback.extract_stack()})
             sleep_dot()
 
             # Play with the propagation APIs... this is not IPC and thus not
             # where they're intended to be used.
             text_carrier = {}
-            opentracing.tracer.inject(child_span.context, opentracing.Format.TEXT_MAP, text_carrier)
+            opentracing.tracer.inject(child_scope.span.context, opentracing.Format.TEXT_MAP, text_carrier)
 
             span_context = opentracing.tracer.extract(opentracing.Format.TEXT_MAP, text_carrier)
-            with opentracing.tracer.start_span(
+            with opentracing.tracer.start_active_span(
                 'trivial/remote_span',
-                child_of=span_context) as remote_span:
-                    remote_span.log_event('Remote!')
-                    remote_span.set_tag('span_type', 'remote')
+                True,
+                child_of=span_context) as remote_scope:
+                    remote_scope.span.log_event('Remote!')
+                    remote_scope.span.set_tag('span_type', 'remote')
                     sleep_dot()
 
 def lightstep_tracer_from_args():
@@ -78,11 +79,11 @@ def lightstep_tracer_from_args():
 
 
 if __name__ == '__main__':
-    print 'Hello ',
+    print('Hello ')
 
     # Use LightStep's opentracing implementation
     with lightstep_tracer_from_args() as tracer:
         opentracing.tracer = tracer
         add_spans()
 
-    print ' World!'
+    print(' World!')
