@@ -57,7 +57,7 @@ def Tracer(**kwargs):
         del kwargs['disable_binary_format']
 
     scope_manager = None
-    if kwargs.has_key('scope_manager'):
+    if 'scope_manager' in kwargs:
         scope_manager = kwargs['scope_manager']
         del kwargs['scope_manager']
 
