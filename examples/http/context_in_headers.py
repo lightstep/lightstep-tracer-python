@@ -35,7 +35,8 @@ class RemoteHandler(BaseHTTPRequestHandler):
     """This handler receives the request from the client.
     """
     def do_GET(self):
-        with before_answering_request(self, opentracing.tracer) as server_span:
+        server_span = before_answering_request(self, opentracing.tracer)
+        with opentracing.tracer.scope_manager.activate(server_span, True):
 
             server_span.log_event('request received', self.path)
 
@@ -155,7 +156,8 @@ if __name__ == '__main__':
             # Prepare request in the client
             url = 'http://localhost:{}'.format(port_number)
             request = Request(url)
-            with before_sending_request(request) as client_span:
+            client_span = before_sending_request(request)
+            with opentracing.tracer.scope_manager.activate(client_span, True):
                 client_span.log_event('sending request', url)
 
                 # Send request to server
