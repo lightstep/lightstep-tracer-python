@@ -19,7 +19,7 @@ def sleep_dot():
 def add_spans():
     """Calls the opentracing API, doesn't use any LightStep-specific code.
     """
-    with opentracing.tracer.start_active_span('trivial/initial_request', True) as parent_scope:
+    with opentracing.tracer.start_active_span('trivial/initial_request') as parent_scope:
         parent_scope.span.set_tag('url', 'localhost')
         sleep_dot()
         parent_scope.span.log_event('All good here!', payload={'N': 42, 'pi': 3.14, 'abc': 'xyz'})
@@ -32,7 +32,7 @@ def add_spans():
         sleep_dot()
 
         # This is how you would represent starting work locally.
-        with opentracing.tracer.start_active_span('trivial/child_request', True) as child_scope:
+        with opentracing.tracer.start_active_span('trivial/child_request') as child_scope:
             child_scope.span.set_tag('span_type', 'child')
             # Pretend there was an error
             child_scope.span.set_tag('error', True)
@@ -47,7 +47,6 @@ def add_spans():
             span_context = opentracing.tracer.extract(opentracing.Format.TEXT_MAP, text_carrier)
             with opentracing.tracer.start_active_span(
                 'trivial/remote_span',
-                True,
                 child_of=span_context) as remote_scope:
                     remote_scope.span.log_event('Remote!')
                     remote_scope.span.set_tag('span_type', 'remote')
