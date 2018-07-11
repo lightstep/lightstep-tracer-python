@@ -1,6 +1,6 @@
 machine:
-    python:
-        version: 2.7.10
+    post:
+        - pyenv global 2.7.10 3.4.4
 # The 'override' is needed to test multiple versions within tox
 # See https://github.com/samstav/circleci-python-sandbox/issues/1#issuecomment-142641082
 dependencies:
