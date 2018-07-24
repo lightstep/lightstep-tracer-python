@@ -1,0 +1,25 @@
+version: 2
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test-2.7
+      - test-3.4
+jobs:
+  test-2.7: &test-template
+    environment:
+      PYTHON_ENV: py27
+    docker:
+      - image: circleci/python:2.7-jessie
+    steps:
+      - checkout
+      - run: sudo pip install tox virtualenv
+      - run: virtualenv env && source env/bin/activate
+      - run: make bootstrap
+      - run: tox -e $PYTHON_ENV
+  test-3.4:
+    <<: *test-template
+    environment:
+      PYTHON_ENV: py34
+    docker:
+      - image: circleci/python:3.4-jessie
