@@ -13,8 +13,9 @@ jobs:
       - image: circleci/python:2.7-jessie
     steps:
       - checkout
-      - run: sudo pip install tox
-      - run: sudo make bootstrap
+      - run: sudo pip install tox virtualenv
+      - run: virtualenv env && source env/bin/activate
+      - run: make bootstrap
       - run: tox -e $PYTHON_ENV
   test-3.4:
     <<: *test-template
