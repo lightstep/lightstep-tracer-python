@@ -1,0 +1,27 @@
+version: 2
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test-2.7
+      - test-3.4
+jobs:
+  test-2.7: &test-template
+    environment:
+      PYTHON_VERSION: 2.7
+    docker:
+      - image: circleci/python:2.7-jessie
+    #branches:
+      #only:
+        #- master
+    steps:
+      - checkout
+      - run: pip install tox tox-pyenv
+      - run: pyenv local $PYTHON_VERSION
+      - run: make test
+  test-3.4:
+    <<: *test-template
+    environment:
+      PYTHON_VERSION: 3.4
+    docker:
+      - image: circleci/python:3.4-jessie
