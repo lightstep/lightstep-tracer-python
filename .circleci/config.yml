@@ -11,9 +11,6 @@ jobs:
       PYTHON_VERSION: 2.7
     docker:
       - image: circleci/python:2.7-jessie
-    #branches:
-      #only:
-        #- master
     steps:
       - checkout
       - run: pip install tox tox-pyenv
