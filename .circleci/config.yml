@@ -8,17 +8,17 @@ workflows:
 jobs:
   test-2.7: &test-template
     environment:
-      PYTHON_VERSION: 2.7
+      PYTHON_ENV: py27
     docker:
       - image: circleci/python:2.7-jessie
     steps:
       - checkout
-      - run: sudo pip install tox tox-pyenv
-      - run: pyenv local $PYTHON_VERSION
-      - run: make test
+      - run: sudo pip install tox
+      - run: sudo make bootstrap
+      - run: tox -e $PYTHON_ENV
   test-3.4:
     <<: *test-template
     environment:
-      PYTHON_VERSION: 3.4
+      PYTHON_ENV: py34
     docker:
       - image: circleci/python:3.4-jessie
