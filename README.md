@@ -13,7 +13,7 @@ pip install lightstep
 
 ## Developer Setup
 
-###Prerequisites
+### Prerequisites
 * [PyEnv](https://github.com/pyenv/pyenv)
 
 ```python
