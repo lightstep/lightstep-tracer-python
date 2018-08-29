@@ -49,6 +49,12 @@ publish: dist
 example: build
 	python examples/trivial/main.py
 
+test27: build
+	tox -e py27
+
+test34: build
+	tox -e py34
+
 test: build
 	tox
 

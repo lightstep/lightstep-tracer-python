@@ -12,7 +12,7 @@ jobs:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     - run: sudo pip install tox
-    - run: make test
+    - run: make test27
     - store_test_results:
         path: /tmp/circleci-test-results
     - store_artifacts:
@@ -32,7 +32,7 @@ jobs:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     - run: sudo pip install tox
-    - run: make test
+    - run: make test34
     - store_test_results:
         path: /tmp/circleci-test-results
     - store_artifacts:
