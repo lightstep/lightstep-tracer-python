@@ -72,5 +72,4 @@ thrift:
 proto:
 	protoc --proto_path "$(PWD)/../googleapis:$(PWD)/../lightstep-tracer-common/" \
 		--python_out="$(PWD)/lightstep" \
-		lightstep.proto \
 		collector.proto
