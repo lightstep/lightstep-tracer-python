@@ -67,3 +67,9 @@ thrift:
 		thrift -r --gen py -out /out /data/crouton.thrift
 	python-modernize -w $(PWD)/lightstep/crouton/
 	rm -rf lightstep/crouton/ReportingService-remote
+
+# LightStep-specific: rebuilds the LightStep protobuf files.
+proto:
+	protoc --proto_path "$(PWD)/../googleapis:$(PWD)/../lightstep-tracer-common/" \
+		--python_out="$(PWD)/lightstep" \
+		collector.proto

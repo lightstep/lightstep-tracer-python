@@ -40,6 +40,22 @@ Only required for LightStep developers
 pip install modernize
 ```
 
+* [Protobuf Python Compiler](http://google.github.io/proto-lens/installing-protoc.html)
+
+Only required for LightStep developers
+```python
+brew install protobuf
+```
+
+* Generating the proto code
+```python
+cd ..
+git clone https://github.com/googleapis/googleapis.git
+git clone https://github.com/lightstep/lightstep-tracer-common.git
+cd lightstep-tracer-python
+make proto
+```
+
 ## Getting Started with Tracing
 
 Please see the [example programs](examples/) for examples of how to use this library. In particular:
