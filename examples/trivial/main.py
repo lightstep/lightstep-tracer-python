@@ -1,7 +1,6 @@
 """Simple example showing several generations of spans in a trace.
 """
 import argparse
-import contextlib
 import sys
 import time
 import traceback
@@ -9,12 +8,14 @@ import traceback
 import opentracing
 import lightstep.tracer
 
+
 def sleep_dot():
     """Short sleep and writes a dot to the STDOUT.
     """
     time.sleep(0.05)
     sys.stdout.write('.')
     sys.stdout.flush()
+
 
 def add_spans():
     """Calls the opentracing API, doesn't use any LightStep-specific code.
@@ -62,11 +63,18 @@ def lightstep_tracer_from_args():
                         default='collector.lightstep.com')
     parser.add_argument('--port', help='The LightStep reporting service port.',
                         type=int, default=443)
-    parser.add_argument('--use_tls', help='Whether to use TLS for reporting',
-                        type=bool, default=True)
+    parser.add_argument('--use_tls', help='Use TLS for reporting',
+                        dest="use_tls", action='store_true')
     parser.add_argument('--component_name', help='The LightStep component name',
                         default='TrivialExample')
+    parser.add_argument('--use_http', help='Use proto over http',
+                        dest="use_http", action='store_true')
     args = parser.parse_args()
+
+    if args.use_tls:
+        collector_encryption = 'tls'
+    else:
+        collector_encryption = 'none'
 
     return lightstep.Tracer(
             component_name=args.component_name,
@@ -74,7 +82,9 @@ def lightstep_tracer_from_args():
             collector_host=args.host,
             collector_port=args.port,
             verbosity=1,
-            collector_encryption=('tls' if args.use_tls else 'none'))
+            collector_encryption=collector_encryption,
+            use_thrift=not args.use_http,
+            use_http=args.use_http)
 
 
 if __name__ == '__main__':

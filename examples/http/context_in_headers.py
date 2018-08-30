@@ -31,6 +31,7 @@ import opentracing
 import opentracing.ext.tags
 import lightstep
 
+
 class RemoteHandler(BaseHTTPRequestHandler):
     """This handler receives the request from the client.
     """
@@ -121,18 +122,23 @@ def lightstep_tracer_from_args():
             default='collector.lightstep.com')
     parser.add_argument('--port', help='The LightStep reporting service port.',
             type=int, default=443)
-    parser.add_argument('--use_tls', help='Whether to use TLS for reporting',
-            type=bool, default=True)
+    parser.add_argument('--use_tls', help='Use TLS for reporting',
+                        dest="use_tls", action='store_true')
     parser.add_argument('--component_name', help='The LightStep component name',
             default='TrivialExample')
     args = parser.parse_args()
+
+    if args.use_tls:
+        collector_encryption = 'tls'
+    else:
+        collector_encryption = 'none'
 
     return lightstep.Tracer(
             component_name=args.component_name,
             access_token=args.token,
             collector_host=args.host,
             collector_port=args.port,
-            collector_encryption=('tls' if args.use_tls else 'none'),
+            collector_encryption=collector_encryption,
             )
 
 
