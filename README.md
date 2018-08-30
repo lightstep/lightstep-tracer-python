@@ -33,6 +33,13 @@ source .tox/py27/bin/activate
 python examples/nontrivial/main.py
 ```
 
+* [Python-Modernize](https://github.com/python-modernize/python-modernize)
+
+Only required for LightStep developers
+```python
+pip install modernize
+```
+
 ## Getting Started with Tracing
 
 Please see the [example programs](examples/) for examples of how to use this library. In particular:
