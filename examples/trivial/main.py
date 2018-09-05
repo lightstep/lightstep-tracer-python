@@ -67,8 +67,8 @@ def lightstep_tracer_from_args():
                         dest="no_tls", action='store_true')
     parser.add_argument('--component_name', help='The LightStep component name',
                         default='TrivialExample')
-    parser.add_argument('--use_http', help='Use proto over http',
-                        dest="use_http", action='store_true')
+    parser.add_argument('--use_thrift', help='Use Thrift over http',
+                        dest="use_thrift", action='store_true')
     args = parser.parse_args()
 
     if args.no_tls:
@@ -83,8 +83,8 @@ def lightstep_tracer_from_args():
             collector_port=args.port,
             verbosity=1,
             collector_encryption=collector_encryption,
-            use_thrift=not args.use_http,
-            use_http=args.use_http)
+            use_thrift=args.use_thrift,
+            use_http=not args.use_thrift)
 
 
 if __name__ == '__main__':

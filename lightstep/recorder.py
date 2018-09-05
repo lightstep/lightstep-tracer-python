@@ -44,8 +44,8 @@ class Recorder(SpanRecorder):
                  periodic_flush_seconds=constants.FLUSH_PERIOD_SECS,
                  verbosity=0,
                  certificate_verification=True,
-                 use_thrift=True,
-                 use_http=False):
+                 use_thrift=False,
+                 use_http=True):
         self.verbosity = verbosity
         # Fail fast on a bad access token
         if not isinstance(access_token, str):
@@ -55,12 +55,12 @@ class Recorder(SpanRecorder):
             warnings.warn('SSL CERTIFICATE VERIFICATION turned off. ALL FUTURE HTTPS calls will be unverified.')
             ssl._create_default_https_context = ssl._create_unverified_context
 
-        if use_thrift:
-            self.use_thrift = True
-            self.converter = ThriftConverter()
-        elif use_http:
+        if use_http:
             self.use_thrift = False
             self.converter = HttpConverter()
+        elif use_thrift:
+            self.use_thrift = True
+            self.converter = ThriftConverter()
         else:
             raise Exception('Either use_thrift or use_http must be True')
 
