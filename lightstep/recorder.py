@@ -45,7 +45,8 @@ class Recorder(SpanRecorder):
                  verbosity=0,
                  certificate_verification=True,
                  use_thrift=False,
-                 use_http=True):
+                 use_http=True,
+                 timeout_seconds=30):
         self.verbosity = verbosity
         # Fail fast on a bad access token
         if not isinstance(access_token, str):
@@ -73,6 +74,7 @@ class Recorder(SpanRecorder):
                 collector_host,
                 collector_port,
                 self.use_thrift)
+        self._timeout_seconds = timeout_seconds
         self._auth = self.converter.create_auth(access_token)
         self._mutex = threading.Lock()
         self._span_records = []
@@ -107,7 +109,7 @@ class Recorder(SpanRecorder):
             if self.use_thrift:
                 self._flush_connection = _ThriftConnection(self._collector_url)
             else:
-                self._flush_connection = _HTTPConnection(self._collector_url)
+                self._flush_connection = _HTTPConnection(self._collector_url, self._timeout_seconds)
             self._flush_connection.open()
             self._flush_thread = threading.Thread(target=self._flush_periodically,
                                                   name=constants.FLUSH_THREAD_NAME)
