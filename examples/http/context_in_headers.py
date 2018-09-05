@@ -122,16 +122,16 @@ def lightstep_tracer_from_args():
             default='collector.lightstep.com')
     parser.add_argument('--port', help='The LightStep reporting service port.',
             type=int, default=443)
-    parser.add_argument('--use_tls', help='Use TLS for reporting',
-                        dest="use_tls", action='store_true')
+    parser.add_argument('--no_tls', help='Disable TLS for reporting',
+                        dest="no_tls", action='store_true')
     parser.add_argument('--component_name', help='The LightStep component name',
             default='TrivialExample')
     args = parser.parse_args()
 
-    if args.use_tls:
-        collector_encryption = 'tls'
-    else:
+    if args.no_tls:
         collector_encryption = 'none'
+    else:
+        collector_encryption = 'tls'
 
     return lightstep.Tracer(
             component_name=args.component_name,
