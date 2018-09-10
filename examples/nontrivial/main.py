@@ -3,7 +3,6 @@ Synthetic example with high concurrency. Used primarily to stress test the
 library.
 """
 import argparse
-import contextlib
 import sys
 import time
 import threading
@@ -16,12 +15,14 @@ sys.path.insert(1, os.path.dirname(os.path.realpath(__file__)) + '/../..')
 import opentracing
 import lightstep
 
+
 def sleep_dot():
     """Short sleep and writes a dot to the STDOUT.
     """
     time.sleep(0.05)
     sys.stdout.write('.')
     sys.stdout.flush()
+
 
 def add_spans():
     """Calls the opentracing API, doesn't use any LightStep-specific code.
@@ -69,18 +70,23 @@ def lightstep_tracer_from_args():
                         default='collector.lightstep.com')
     parser.add_argument('--port', help='The LightStep reporting service port.',
                         type=int, default=443)
-    parser.add_argument('--use_tls', help='Whether to use TLS for reporting',
-                        type=bool, default=True)
+    parser.add_argument('--no_tls', help='Disable TLS for reporting',
+                        dest="no_tls", action='store_true')
     parser.add_argument('--component_name', help='The LightStep component name',
                         default='NonTrivialExample')
     args = parser.parse_args()
 
+    if args.no_tls:
+        collector_encryption = 'none'
+    else:
+        collector_encryption = 'tls'
+
     return lightstep.Tracer(
-	    component_name=args.component_name,
-	    access_token=args.token,
-	    collector_host=args.host,
-	    collector_port=args.port,
-        collector_encryption=('tls' if args.use_tls else 'none'))
+        component_name=args.component_name,
+        access_token=args.token,
+        collector_host=args.host,
+        collector_port=args.port,
+        collector_encryption=collector_encryption)
 
 
 if __name__ == '__main__':

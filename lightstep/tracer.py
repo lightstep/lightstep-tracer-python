@@ -47,6 +47,9 @@ def Tracer(**kwargs):
         inject/extract format (which relies on protobufs and may cause problems
         if other versions of protobufs are active in the same packaging
         configuration). Defaults to False (i.e., binary format is enabled).
+    :param bool use_thrift: Forces the use of Thrift as the transport protocol.
+    :param bool use_http: Forces the use of Proto over http.
+    :param float timeout_seconds: Number of seconds allowed for the HTTP report transaction (fractions are permitted)
     """
     enable_binary_format = True
     if 'disable_binary_format' in kwargs:

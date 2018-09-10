@@ -7,9 +7,7 @@ See the API definition for comments.
 """
 
 import atexit
-import jsonpickle
 import ssl
-import sys
 import threading
 import time
 import traceback
@@ -17,11 +15,12 @@ import warnings
 
 from basictracer.recorder import SpanRecorder
 
-from .crouton import ttypes
+from lightstep.http_converter import HttpConverter
+from lightstep.thrift_converter import ThriftConverter
 from . import constants
-from . import version as tracer_version
 from . import util
-from . import connection as conn
+from lightstep.thrift_connection import _ThriftConnection
+from lightstep.http_connection import _HTTPConnection
 
 
 class Recorder(SpanRecorder):
@@ -44,50 +43,39 @@ class Recorder(SpanRecorder):
                  max_span_records=constants.DEFAULT_MAX_SPAN_RECORDS,
                  periodic_flush_seconds=constants.FLUSH_PERIOD_SECS,
                  verbosity=0,
-                 certificate_verification=True):
+                 certificate_verification=True,
+                 use_thrift=False,
+                 use_http=True,
+                 timeout_seconds=30):
         self.verbosity = verbosity
         # Fail fast on a bad access token
-        if isinstance(access_token, str) == False:
+        if not isinstance(access_token, str):
             raise Exception('access_token must be a string')
 
         if certificate_verification is False:
             warnings.warn('SSL CERTIFICATE VERIFICATION turned off. ALL FUTURE HTTPS calls will be unverified.')
             ssl._create_default_https_context = ssl._create_unverified_context
 
-        if component_name is None:
-            component_name = sys.argv[0]
+        if use_http:
+            self.use_thrift = False
+            self.converter = HttpConverter()
+        elif use_thrift:
+            self.use_thrift = True
+            self.converter = ThriftConverter()
+        else:
+            raise Exception('Either use_thrift or use_http must be True')
 
-        # Thrift runtime configuration
         self.guid = util._generate_guid()
-        timestamp = util._now_micros()
-
-        python_version = '.'.join(map(str, sys.version_info[0:3]))
-        if tags is None:
-            tags = {}
-        tracer_tags = tags.copy()
-        tracer_tags.update({
-            'lightstep.tracer_platform': 'python',
-            'lightstep.tracer_platform_version': python_version,
-            'lightstep.tracer_version': tracer_version.LIGHTSTEP_PYTHON_TRACER_VERSION,
-            'lightstep.component_name': component_name,
-            'lightstep.guid': util._id_to_hex(self.guid),
-            })
-        # Convert tracer_tags to a list of KeyValue pairs.
-        runtime_attrs = [ttypes.KeyValue(k, util._coerce_str(v)) for (k, v) in tracer_tags.items()]
-
-        # Thrift is picky about the types being correct, so we're explicit here
-        self._runtime = ttypes.Runtime(
-                util._id_to_hex(self.guid),
-                timestamp,
-                util._coerce_str(component_name),
-                runtime_attrs)
+        self._runtime = self.converter.create_runtime(component_name, tags, self.guid)
         self._finest("Initialized with Tracer runtime: {0}", (self._runtime,))
         secure = collector_encryption != 'none'  # the default is 'tls'
         self._collector_url = util._collector_url_from_hostport(
                 secure,
                 collector_host,
-                collector_port)
-        self._auth = ttypes.Auth(access_token)
+                collector_port,
+                self.use_thrift)
+        self._timeout_seconds = timeout_seconds
+        self._auth = self.converter.create_auth(access_token)
         self._mutex = threading.Lock()
         self._span_records = []
         self._max_span_records = max_span_records
@@ -118,7 +106,10 @@ class Recorder(SpanRecorder):
         background flush thread starts before `fork()` calls happen.
         """
         if (self._periodic_flush_seconds > 0) and (self._flush_thread is None):
-            self._flush_connection = conn._Connection(self._collector_url)
+            if self.use_thrift:
+                self._flush_connection = _ThriftConnection(self._collector_url)
+            else:
+                self._flush_connection = _HTTPConnection(self._collector_url, self._timeout_seconds)
             self._flush_connection.open()
             self._flush_thread = threading.Thread(target=self._flush_periodically,
                                                   name=constants.FLUSH_THREAD_NAME)
@@ -156,44 +147,17 @@ class Recorder(SpanRecorder):
             if len(self._span_records) >= self._max_span_records:
                 return
 
-        span_record = ttypes.SpanRecord(
-            trace_guid=util._id_to_hex(span.context.trace_id),
-            span_guid=util._id_to_hex(span.context.span_id),
-            runtime_guid=util._id_to_hex(self.guid),
-            span_name=util._coerce_str(span.operation_name),
-            join_ids=[],
-            oldest_micros=util._time_to_micros(span.start_time),
-            youngest_micros=util._time_to_micros(span.start_time + span.duration),
-            attributes=[],
-            log_records=[]
-        )
+        span_record = self.converter.create_span_record(span, self.guid)
 
-        if span.parent_id != None:
-            span_record.attributes.append(
-                ttypes.KeyValue(
-                    constants.PARENT_SPAN_GUID,
-                    util._id_to_hex(span.parent_id)))
         if span.tags:
             for key in span.tags:
                 if key[:len(constants.JOIN_ID_TAG_PREFIX)] == constants.JOIN_ID_TAG_PREFIX:
-                    span_record.join_ids.append(ttypes.TraceJoinId(key, util._coerce_str(span.tags[key])))
+                    self.converter.append_join_id(span_record, key, util._coerce_str(span.tags[key]))
                 else:
-                    span_record.attributes.append(ttypes.KeyValue(key, util._coerce_str(span.tags[key])))
+                    self.converter.append_attribute(span_record, key, util._coerce_str(span.tags[key]))
 
         for log in span.logs:
-            event = log.key_values.get('event') or ''
-            if len(event) > 0:
-                # Don't allow for arbitrarily long log messages.
-                if sys.getsizeof(event) > constants.MAX_LOG_MEMORY:
-                    event = event[:constants.MAX_LOG_LEN]
-            payload = log.key_values.get('payload')
-            fields = None
-            if log.key_values is not None and len(log.key_values) > 0:
-                fields = [ttypes.KeyValue(k, util._coerce_str(v)) for (k, v) in log.key_values.items()]
-
-            span_record.log_records.append(ttypes.LogRecord(
-                timestamp_micros=util._time_to_micros(log.timestamp),
-                fields=fields))
+            self.converter.append_log(span_record, log)
 
         with self._mutex:
             if len(self._span_records) < self._max_span_records:
@@ -284,39 +248,24 @@ class Recorder(SpanRecorder):
                         if command.disable:
                             self.shutdown(flush=False)
             # Return whether we sent any span data
-            return len(report_request.span_records) > 0
+            return self.converter.num_span_records(report_request) > 0
 
         except Exception as e:
             self._fine(
                     "Caught exception during report: {0}, stack trace: {1}",
                     (e, traceback.format_exc()))
-            self._restore_spans(report_request.span_records)
+            self._restore_spans(report_request)
             return False
-
 
     def _construct_report_request(self):
         """Construct a report request."""
         report = None
         with self._mutex:
-            report = ttypes.ReportRequest(self._runtime, self._span_records,
-                                          None)
+            report = self.converter.create_report(self._runtime, self._span_records)
             self._span_records = []
-        for span in report.span_records:
-            for log in span.log_records:
-                index = span.log_records.index(log)
-                if log.payload_json is not None:
-                    try:
-                        log.payload_json = \
-                                           jsonpickle.encode(log.payload_json,
-                                                             unpicklable=False,
-                                                             make_refs=False,
-                                                             max_depth=constants.JSON_MAX_DEPTH)
-                    except:
-                        log.payload_json = jsonpickle.encode(constants.JSON_FAIL)
-                span.log_records[index] = log
         return report
 
-    def _restore_spans(self, span_records):
+    def _restore_spans(self, report_request):
         """Called after a flush error to move records back into the buffer
         """
         if self._disabled_runtime:
@@ -325,5 +274,5 @@ class Recorder(SpanRecorder):
         with self._mutex:
             if len(self._span_records) >= self._max_span_records:
                 return
-            combined = span_records + self._span_records
+            combined = self.converter.combine_span_records(report_request, self._span_records)
             self._span_records = combined[-self._max_span_records:]
