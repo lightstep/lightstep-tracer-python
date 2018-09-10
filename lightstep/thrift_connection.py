@@ -9,7 +9,8 @@ from .crouton import ReportingService
 
 CONSECUTIVE_ERRORS_BEFORE_RECONNECT = 200
 
-class _Connection(object):
+
+class _ThriftConnection(object):
     """Instances of _Connection are used to establish a connection to the
     server via HTTP protocol.
 

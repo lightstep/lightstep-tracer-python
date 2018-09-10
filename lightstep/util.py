@@ -8,7 +8,8 @@ from . import constants
 
 guid_rng = random.Random()   # Uses urandom seed
 
-def _collector_url_from_hostport(secure, host, port):
+
+def _collector_url_from_hostport(secure, host, port, use_thrift):
     """
     Create an appropriate collector URL given the parameters.
 
@@ -18,7 +19,11 @@ def _collector_url_from_hostport(secure, host, port):
         protocol = 'https://'
     else:
         protocol = 'http://'
-    return ''.join([protocol, host, ':', str(port), '/_rpc/v1/reports/binary'])
+    if use_thrift:
+        return ''.join([protocol, host, ':', str(port), '/_rpc/v1/reports/binary'])
+    else:
+        return ''.join([protocol, host, ':', str(port), '/api/v2/reports'])
+
 
 def _generate_guid():
     """

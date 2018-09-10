@@ -11,19 +11,57 @@ apt-get install python-dev
 pip install lightstep
 ```
 
-## Getting started
+## Developer Setup
+
+### Prerequisites
+* [PyEnv](https://github.com/pyenv/pyenv)
+
+```python
+pyenv install 2.7.15
+pyenv install 3.4.9
+pyenv local 2.7.15 3.4.9
+```
+
+* [Tox](https://pypi.org/project/tox/)
+```python
+tox
+```
+
+* Run the examples:
+```python
+source .tox/py27/bin/activate
+python examples/nontrivial/main.py
+```
+
+* [Python-Modernize](https://github.com/python-modernize/python-modernize)
+
+Only required for LightStep developers
+```python
+pip install modernize
+```
+
+* [Protobuf Python Compiler](http://google.github.io/proto-lens/installing-protoc.html)
+
+Only required for LightStep developers
+```python
+brew install protobuf
+```
+
+* Generating the proto code
+```python
+cd ..
+git clone https://github.com/googleapis/googleapis.git
+git clone https://github.com/lightstep/lightstep-tracer-common.git
+cd lightstep-tracer-python
+make proto
+```
+
+## Getting Started with Tracing
 
 Please see the [example programs](examples/) for examples of how to use this library. In particular:
 
 * [Trivial Example](examples/trivial/main.py) shows how to use the library on a single host.
 * [Context in Headers](examples/http/context_in_headers.py) shows how to pass a `TraceContext` through `HTTP` headers.
-
-You can run the examples by doing:
-```python
-tox
-source .tox/py27/bin/activate
-python examples/nontrivial/main.py
-```
 
 Or if your python code is already instrumented for OpenTracing, you can simply switch to LightStep's implementation with:
 
@@ -43,4 +81,3 @@ if __name__ == "__main__":
 ```
 
 This library is the LightStep binding for [OpenTracing](http://opentracing.io/). See the [OpenTracing Python API](https://github.com/opentracing/opentracing-python) for additional detail.
-
