@@ -26,7 +26,6 @@ except ImportError:
     )
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
-
 import opentracing
 import opentracing.ext.tags
 import lightstep
@@ -35,9 +34,9 @@ import lightstep
 class RemoteHandler(BaseHTTPRequestHandler):
     """This handler receives the request from the client.
     """
+
     def do_GET(self):
         with before_answering_request(self, opentracing.tracer) as server_span:
-
             server_span.log_event('request received', self.path)
 
             self.send_response(200)
@@ -82,8 +81,8 @@ def before_answering_request(handler, tracer):
     span = None
     if extracted_context:
         span = tracer.start_span(
-                operation_name=operation,
-                child_of=extracted_context)
+            operation_name=operation,
+            child_of=extracted_context)
     else:
         print('ERROR: Context missing, starting new trace')
         global _exit_code
@@ -117,15 +116,15 @@ def lightstep_tracer_from_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--token', help='Your LightStep access token.',
-            default='{your_access_token}')
+                        default='{your_access_token}')
     parser.add_argument('--host', help='The LightStep reporting service host to contact.',
-            default='collector.lightstep.com')
+                        default='collector.lightstep.com')
     parser.add_argument('--port', help='The LightStep reporting service port.',
-            type=int, default=443)
+                        type=int, default=443)
     parser.add_argument('--no_tls', help='Disable TLS for reporting',
                         dest="no_tls", action='store_true')
     parser.add_argument('--component_name', help='The LightStep component name',
-            default='TrivialExample')
+                        default='TrivialExample')
     args = parser.parse_args()
 
     if args.no_tls:
@@ -134,12 +133,12 @@ def lightstep_tracer_from_args():
         collector_encryption = 'tls'
 
     return lightstep.Tracer(
-            component_name=args.component_name,
-            access_token=args.token,
-            collector_host=args.host,
-            collector_port=args.port,
-            collector_encryption=collector_encryption,
-            )
+        component_name=args.component_name,
+        access_token=args.token,
+        collector_host=args.host,
+        collector_port=args.port,
+        collector_encryption=collector_encryption,
+    )
 
 
 if __name__ == '__main__':
