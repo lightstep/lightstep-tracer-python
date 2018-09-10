@@ -52,81 +52,12 @@ def recorder(request):
     yield recorder
 
 
-# --------------
-# SHUTDOWN TESTS
-# --------------
-def test_send_spans_after_shutdown(recorder):
-    mock_connection = MockConnection()
-    mock_connection.open()
-    # Send 10 spans
-    for i in range(10):
-        recorder.record_span(dummy_basic_span(recorder, i))
-    assert recorder.flush(mock_connection)
-
-    # Check 10 spans
-    check_spans(recorder.converter, mock_connection.reports[0])
-
-    # Delete current logs and shutdown runtime
-    mock_connection.clear()
-    recorder.shutdown()
-
-    # Send 10 spans, though none should get through
-    for i in range(10):
-        recorder.record_span(dummy_basic_span(recorder, i))
-    assert not recorder.flush(mock_connection)
-    assert len(mock_connection.reports) == 0
-
-
-def test_shutdown_twice(recorder):
-    recorder.shutdown()
-    recorder.shutdown()
-
-
-# ------------
-# STRESS TESTS
-# ------------
-def test_stress_logs(recorder):
-    mock_connection = MockConnection()
-    mock_connection.open()
-    for i in range(1000):
-        recorder.record_span(dummy_basic_span(recorder, i))
-    assert recorder.flush(mock_connection)
-    assert recorder.converter.num_span_records(mock_connection.reports[0]) == 1000
-    check_spans(recorder.converter, mock_connection.reports[0])
-
-
-def test_stress_spans(recorder):
-    mock_connection = MockConnection()
-    mock_connection.open()
-    for i in range(1000):
-        recorder.record_span(dummy_basic_span(recorder, i))
-    assert recorder.flush(mock_connection)
-    assert recorder.converter.num_span_records(mock_connection.reports[0]) == 1000
-    check_spans(recorder.converter, mock_connection.reports[0])
-
-
-# -------------
-# RUNTIME TESTS
-# -------------
-def test_buffer_limits(recorder):
-    mock_connection = MockConnection()
-    mock_connection.open()
-    recorder._max_span_records = 88
-
-    assert len(recorder._span_records) == 0
-    for i in range(0, 100):
-        recorder.record_span(dummy_basic_span(recorder, i))
-    assert len(recorder._span_records) == 88
-    assert recorder.flush(mock_connection)
-
-
 # ------_
 # HELPERS
 # ------_
 def check_spans(converter, report):
     """Checks spans' name.
     """
-<<<<<<< HEAD
     def setUp(self):
         self.mock_connection = MockConnection()
         self.mock_connection.open()

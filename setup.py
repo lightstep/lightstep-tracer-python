@@ -10,7 +10,7 @@ setup(
     install_requires=['thrift==0.10.0',
                       'jsonpickle',
                       'six',
-                      'basictracer>=3.0,<3.1'],
+                      'basictracer>=3.0,<3.1',
                       'googleapis-common-protos==1.5.3',
                       'requests==2.19.1'],
     tests_require=['pytest',
