@@ -12,7 +12,7 @@ setup(
                       'six',
                       'basictracer>=3.0,<3.1',
                       'googleapis-common-protos==1.5.3',
-                      'requests==2.19.1'],
+                      'requests>=2.19,<3.0'],
     tests_require=['pytest',
                    'sphinx',
                    'sphinx-epytext'],
