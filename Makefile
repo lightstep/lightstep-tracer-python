@@ -52,8 +52,8 @@ example: build
 test27: build
 	tox -e py27
 
-test34: build
-	tox -e py34
+test3: build
+	tox -e py37
 
 test: build
 	tox
