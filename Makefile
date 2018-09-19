@@ -55,6 +55,15 @@ test27: build
 test34: build
 	tox -e py34
 
+test35: build
+	tox -e py35
+
+test36: build
+	tox -e py36
+
+test37: build
+	tox -e py37
+
 test: build
 	tox
 

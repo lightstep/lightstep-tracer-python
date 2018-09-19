@@ -19,6 +19,9 @@ pip install lightstep
 ```python
 pyenv install 2.7.15
 pyenv install 3.4.9
+pyenv install 3.5.6
+pyenv install 3.6.6
+pyenv install 3.7.0
 pyenv local 2.7.15 3.4.9
 ```
 
@@ -29,7 +32,7 @@ tox
 
 * Run the examples:
 ```python
-source .tox/py27/bin/activate
+source .tox/py37/bin/activate
 python examples/nontrivial/main.py
 ```
 
