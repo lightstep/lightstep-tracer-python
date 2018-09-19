@@ -47,6 +47,9 @@ def Tracer(**kwargs):
         inject/extract format (which relies on protobufs and may cause problems
         if other versions of protobufs are active in the same packaging
         configuration). Defaults to False (i.e., binary format is enabled).
+    :param ScopeManager scope_manager: the ScopeManager responsible for
+        Span activation. Defaults to the implementation provided by the
+        basictracer package, which uses thread-local storage.
     :param bool use_thrift: Forces the use of Thrift as the transport protocol.
     :param bool use_http: Forces the use of Proto over http.
     :param float timeout_seconds: Number of seconds allowed for the HTTP report transaction (fractions are permitted)
@@ -55,13 +58,21 @@ def Tracer(**kwargs):
     if 'disable_binary_format' in kwargs:
         enable_binary_format = not kwargs['disable_binary_format']
         del kwargs['disable_binary_format']
-    return _LightstepTracer(enable_binary_format, Recorder(**kwargs))
+
+    scope_manager = None
+    if 'scope_manager' in kwargs:
+        scope_manager = kwargs['scope_manager']
+        del kwargs['scope_manager']
+
+    return _LightstepTracer(enable_binary_format,
+                            Recorder(**kwargs),
+                            scope_manager)
 
 
 class _LightstepTracer(BasicTracer):
-    def __init__(self, enable_binary_format, recorder):
+    def __init__(self, enable_binary_format, recorder, scope_manager):
         """Initialize the LightStep Tracer, deferring to BasicTracer."""
-        super(_LightstepTracer, self).__init__(recorder)
+        super(_LightstepTracer, self).__init__(recorder, scope_manager=scope_manager)
         self.register_propagator(Format.TEXT_MAP, TextPropagator())
         self.register_propagator(Format.HTTP_HEADERS, TextPropagator())
         if enable_binary_format:
