@@ -26,6 +26,7 @@ JSON_WARNING = True
 
 # utils constants
 SECONDS_TO_MICRO = 1000000
+SECONDS_TO_NANOS = 1000000000
 
 # Recorder constants
 MAX_LOG_MEMORY = 1024
