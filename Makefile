@@ -31,7 +31,7 @@ dist: build docs inc-version
 # TODO: There's inelegant dependency on Node.js here
 inc-version: scripts/node_modules
 	node scripts/inc_version.js
-	git tag `cat VERSION`
+	#git tag `cat VERSION`
 
 scripts/node_modules:
 	cd scripts && npm update
@@ -40,7 +40,7 @@ publish: dist
 	@if [ $(shell git symbolic-ref --short -q HEAD) = "master" ]; then exit 0; else \
 	echo "Current git branch does not appear to be 'master'. Refusing to publish."; exit 1; \
 	fi
-	git add VERSION lightstep/version.py setup.py
+	git add VERSION lightstep/version.py setup.py CHANGELOG.md
 	git commit -m "Updating Version to `cat VERSION`"
 	git push
 	git push --tags
