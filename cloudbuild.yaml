@@ -1,0 +1,9 @@
+steps:
+  - name: 'gcr.io/cloud-builders/git'
+    args: ['clone', 'https://github.com/lightstep/conformance.git']
+  - name: 'gcr.io/cloud-builders/go:debian'
+    args: ['install', 'github.com/lightstep/conformance/runner']
+    env: ['PROJECT_ROOT=github.com/lightstep']
+  - name: 'python:2'
+    entrypoint: 'sh'
+    args: ['-c', 'pip install -r requirements.txt && gopath/bin/runner python tests/conformance/conformance_client.py']
