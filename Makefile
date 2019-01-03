@@ -82,6 +82,3 @@ proto:
 	protoc --proto_path "$(PWD)/../googleapis:$(PWD)/../lightstep-tracer-common/" \
 		--python_out="$(PWD)/lightstep" \
 		collector.proto
-
-conformance: build cloudbuild.yaml
-	gcloud builds submit --config cloudbuild.yaml .
