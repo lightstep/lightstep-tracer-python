@@ -1,3 +1,7 @@
+<a name="4.0.3"></a>
+## [4.0.2](https://github.com/lightstep/lightstep-tracer-python/compare/4.0.2...4.0.3)
+* Better handle non-success status codes in the Thrift response path.
+
 <a name="4.0.2"></a>
 ## [4.0.2](https://github.com/lightstep/lightstep-tracer-python/compare/4.0.1...4.0.2)
 * Declare protobuf as a dependency
