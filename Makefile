@@ -67,16 +67,6 @@ test37: build
 test: build
 	tox
 
-
-# LightStep-specific: rebuilds the LightStep thrift protocol files.  Assumes
-# the command is run within the LightStep development environment (i.e. the
-# MONO_REPO environment variable is set).
-thrift:
-	docker run -v "$(PWD)/lightstep:/out" -v "$(MONO_REPO)/go/src/github.com/lightstep/common-go:/data" --rm thrift:0.10.0 \
-		thrift -r --gen py -out /out /data/crouton.thrift
-	python-modernize -w $(PWD)/lightstep/crouton/
-	rm -rf lightstep/crouton/ReportingService-remote
-
 # LightStep-specific: rebuilds the LightStep protobuf files.
 proto:
 	protoc --proto_path "$(PWD)/../googleapis:$(PWD)/../lightstep-tracer-common/" \
