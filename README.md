@@ -16,6 +16,11 @@ pip install lightstep
 ### Prerequisites
 * [PyEnv](https://github.com/pyenv/pyenv)
 
+On OS X install PyEnv with
+```
+$ brew install pyenv
+```
+
 ```python
 pyenv install 2.7.15
 pyenv install 3.4.9
@@ -25,16 +30,35 @@ pyenv install 3.7.0
 pyenv local 2.7.15 3.4.9
 ```
 
+If pyenv fails to install because zlib not found use (substitute each version)
+```
+$ CFLAGS="-I$(xcrun --show-sdk-path)/usr/include" pyenv install -v 3.7.0
+```
+
 * [Tox](https://pypi.org/project/tox/)
+On OS X install tox with
+```
+$ brew install tox
+```
+
+
 ```python
 tox
 ```
 
-* Run the examples:
-```python
-source .tox/py37/bin/activate
-python examples/nontrivial/main.py
+If tox fails due to missing python interpreters modify tox.ini
 ```
+[tox]
+envlist = python2.7, python3.4, python3.5, python3.6, python3.7
+```
+
+* Run the examples:
+```
+$ source .tox/py37/bin/activate
+$ python examples/nontrivial/main.py
+```
+
+If you needed to modify the pyenv commands above, then change py37 to python3.7
 
 * [Python-Modernize](https://github.com/python-modernize/python-modernize)
 
