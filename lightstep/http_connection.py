@@ -31,7 +31,8 @@ class _HTTPConnection(object):
             try:
                 report.auth.access_token = auth.access_token
                 headers = {"Content-Type": "application/octet-stream",
-                           "Accept": "application/octet-stream"}
+                           "Accept": "application/octet-stream",
+                           "LightStep-Access-Token": report.access_token}
 
                 r = requests.post(
                     self._collector_url,
