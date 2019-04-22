@@ -90,8 +90,8 @@ as enabling use_thrift.
 ```python
 return lightstep.Tracer(
     component_name='WhatIDoWhatIDidnt',
-    access_token='587145376229b4e8cc4d99d948bb967b',
-    collector_host='collector-grpc-staging.lightstep.com',
+    access_token='your-token-here',
+    collector_host='satellite.host',
     collector_port=80,
     collector_encryption='none',
     verbosity=2,
