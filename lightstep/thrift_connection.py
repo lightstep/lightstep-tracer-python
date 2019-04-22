@@ -60,6 +60,8 @@ class _ThriftConnection(object):
         with self._lock:
             try:
                 if self._client:
+                    headers = {"Lightstep-Access-Token": args[0].access_token}
+                    self._transport.setCustomHeaders(headers)
                     resp = self._client.Report(*args, **kwargs)
                     self._report_consecutive_errors = 0
             except Thrift.TException:
