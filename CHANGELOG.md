@@ -1,6 +1,6 @@
 <a name="4.0.4"></a>
 ## [4.0.2](https://github.com/lightstep/lightstep-tracer-python/compare/4.0.2...4.0.3)
-* Add LightStep-Access-Token headers to outgoing requests.
+* Add LightStep-Access-Token header to outgoing requests.
 
 <a name="4.0.3"></a>
 ## [4.0.2](https://github.com/lightstep/lightstep-tracer-python/compare/4.0.2...4.0.3)
