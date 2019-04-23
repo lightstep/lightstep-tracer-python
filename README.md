@@ -83,4 +83,20 @@ if __name__ == "__main__":
   opentracing.tracer.flush()
 ```
 
+### Thrift
+When using apache thrift rpc, make sure to both disable use_http by setting it to False as well
+as enabling use_thrift.
+
+```python
+return lightstep.Tracer(
+    component_name='WhatIDoWhatIDidnt',
+    access_token='your-token-here',
+    collector_host='satellite.host',
+    collector_port=80,
+    collector_encryption='none',
+    verbosity=2,
+    use_http=False,
+    use_thrift=True)
+```
+
 This library is the LightStep binding for [OpenTracing](http://opentracing.io/). See the [OpenTracing Python API](https://github.com/opentracing/opentracing-python) for additional detail.
