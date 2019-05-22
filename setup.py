@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='lightstep',
-    version='4.0.4',
+    version='4.1.1',
     description='LightStep Python OpenTracing Implementation',
     long_description='',
     author='LightStep',
@@ -10,7 +10,7 @@ setup(
     install_requires=['thrift>=0.10.0,<0.12.0',
                       'jsonpickle',
                       'six',
-                      'basictracer>=3.0,<3.1',
+                      'basictracer>=3.0,<4',
                       'googleapis-common-protos>=1.5.3,<2.0',
                       'requests>=2.19,<3.0',
                       'protobuf>=3.6.0,<4.0'],

@@ -1,7 +1,11 @@
 CHANGELOG.md
-<a name="4.0.4"></a>
+<a name="4.1.1"></a>
 ## [4.0.2](https://github.com/lightstep/lightstep-tracer-python/compare/4.0.3...4.0.4)
 * Add LightStep-Access-Token header to outgoing requests.
+
+<a name="4.1.0"></a>
+## [4.1.0](https://github.com/lightstep/lightstep-tracer-python/compare/4.0.3...4.1.0)
+* Support access token passing via headers
 
 <a name="4.0.3"></a>
 ## [4.0.2](https://github.com/lightstep/lightstep-tracer-python/compare/4.0.2...4.0.3)
