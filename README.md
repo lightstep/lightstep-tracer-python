@@ -89,12 +89,7 @@ as enabling use_thrift.
 
 ```python
 return lightstep.Tracer(
-    component_name='WhatIDoWhatIDidnt',
-    access_token='your-token-here',
-    collector_host='satellite.host',
-    collector_port=80,
-    collector_encryption='none',
-    verbosity=2,
+    ...
     use_http=False,
     use_thrift=True)
 ```
