@@ -1,5 +1,6 @@
 import sys
 import unittest
+import time
 
 from lightstep import util
 
@@ -33,6 +34,15 @@ class UtilTest(unittest.TestCase):
             self.assertEqual('unicode', util._coerce_str('unicode'))
             self.assertEqual('hard unicode char: \u200b', util._coerce_str(b'hard unicode char: \xe2\x80\x8b'))
 
+    def test_time_to_seconds_nanos(self):
+        tstamp = int(time.time())
+        seconds, nanos = util._time_to_seconds_nanos(tstamp)
+        self.assertEqual(tstamp, seconds)
+        self.assertEqual(0, nanos)
+
+        seconds, nanos = util._time_to_seconds_nanos(777.987654321)
+        self.assertEqual(777, seconds)
+        self.assertEqual(987654321, nanos)
 
 if __name__ == '__main__':
     unittest.main()

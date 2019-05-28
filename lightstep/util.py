@@ -46,6 +46,15 @@ def _time_to_micros(t):
     """
     return math.floor(round(t * constants.SECONDS_TO_MICRO))
 
+def _time_to_seconds_nanos(t):
+    """
+    Convert a time.time()-style timestamp to a tuple containing
+    seconds and nanoseconds.
+    """
+    seconds = int(t)
+    nanos = int((t - seconds) * constants.SECONDS_TO_NANOS)
+    return (seconds, nanos)
+
 def _merge_dicts(*dict_args):
     """Destructively merges dictionaries, returns None instead of an empty dictionary.
 
