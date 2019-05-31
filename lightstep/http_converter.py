@@ -1,5 +1,4 @@
 from lightstep.collector_pb2 import Auth, ReportRequest, Span, Reporter, KeyValue, Reference, SpanContext
-from lightstep.constants import SECONDS_TO_NANOS
 from lightstep.converter import Converter
 from . import util
 from . import version as tracer_version
@@ -40,8 +39,7 @@ class HttpConverter(Converter):
     def create_span_record(self, span, guid):
         span_context = SpanContext(trace_id=span.context.trace_id,
                                    span_id=span.context.span_id)
-        seconds = int(span.start_time)
-        nanos = int((span.start_time - seconds) * SECONDS_TO_NANOS)
+        seconds, nanos = util._time_to_seconds_nanos(span.start_time)
         span_record = Span(span_context=span_context,
                            operation_name=util._coerce_str(span.operation_name),
                            start_timestamp=Timestamp(seconds=seconds, nanos=nanos),
@@ -63,8 +61,11 @@ class HttpConverter(Converter):
 
     def append_log(self, span_record, log):
         if log.key_values is not None and len(log.key_values) > 0:
+            seconds, nanos = util._time_to_seconds_nanos(log.timestamp)
+
             proto_log = span_record.logs.add()
-            proto_log.timestamp.seconds=int(log.timestamp)
+            proto_log.timestamp.seconds=seconds
+            proto_log.timestamp.nanos=nanos
             for k, v in log.key_values.items():
                 field = proto_log.fields.add()
                 field.key = k
