@@ -14,6 +14,7 @@ import traceback
 import warnings
 
 from basictracer.recorder import SpanRecorder
+from opentracing.logs import ERROR_KIND, STACK
 
 from lightstep.http_converter import HttpConverter
 from lightstep.thrift_converter import ThriftConverter
@@ -157,11 +158,22 @@ class Recorder(SpanRecorder):
                     self.converter.append_attribute(span_record, key, util._coerce_str(span.tags[key]))
 
         for log in span.logs:
-            self.converter.append_log(span_record, log)
+            self.converter.append_log(span_record, self._normalize_log(log))
 
         with self._mutex:
             if len(self._span_records) < self._max_span_records:
                 self._span_records.append(span_record)
+
+    def _normalize_log(self, log):
+        if log.key_values is not None and len(log.key_values) > 0:
+
+            if ERROR_KIND in log.key_values:
+                log.key_values[ERROR_KIND] = util._format_exc_type(log.key_values[ERROR_KIND])
+
+            if STACK in log.key_values:
+                log.key_values[STACK] = util._format_exc_tb(log.key_values[STACK])
+
+        return log
 
     def flush(self, connection=None):
         """Immediately send unreported data to the server.
