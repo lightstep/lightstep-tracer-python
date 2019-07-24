@@ -3,6 +3,8 @@
 import random
 import sys
 import time
+import traceback
+import types
 import math
 from . import constants
 
@@ -102,3 +104,22 @@ def _coerce_to_unicode(val):
             # Never let these errors bubble up
             return '(encoding error)'
 
+
+def _format_exc_tb(exc_tb):
+    if type(exc_tb) is types.TracebackType:
+        return ''.join(traceback.format_tb(exc_tb))
+
+    return exc_tb
+
+
+def _format_exc_type(exc_type):
+    if exc_type is None:
+        return None
+
+    try:
+        return exc_type.__name__
+    except AttributeError:
+        pass
+
+    # Fallback to the original object.
+    return exc_type
