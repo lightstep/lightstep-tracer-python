@@ -7,18 +7,18 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:2.7
+      - image: circleci/python:2.7
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test27
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test27
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
 
   test-python3.4:
     working_directory: ~/lightstep/lightstep-tracer-python
@@ -27,18 +27,18 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:3.4
+      - image: circleci/python:3.4
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test34
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test34
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
 
   test-python3.5:
     working_directory: ~/lightstep/lightstep-tracer-python
@@ -47,18 +47,18 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:3.5
+      - image: circleci/python:3.5
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test35
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test35
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
 
   test-python3.6:
     working_directory: ~/lightstep/lightstep-tracer-python
@@ -67,18 +67,18 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:3.6
+      - image: circleci/python:3.6
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test36
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test36
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
 
   test-python3.7:
     working_directory: ~/lightstep/lightstep-tracer-python
@@ -87,18 +87,58 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:3.7
+      - image: circleci/python:3.7
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test37
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test37
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
+
+  regression_test:
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/tracer-benchmark
+      - run: ~/tracer-benchmark/scripts/ci_setup.sh
+      # install the LS tracer
+      - run: sudo pip install -e ~/repo
+      - run: pytest --client_name python-cpp ~/tracer-benchmark/test_client.py
+      - store_artifacts:
+          path: logs
+          destination: logs
+
+  # make_graphs:
+  #   docker:
+  #     - image: circleci/python:3.7.4
+  #   working_directory: ~/repo
+  #
+  #   steps:
+  #     - run: cd ~; git clone https://github.com/isaaczinda/tracer-benchmark.git repo
+  #     - run: ./scripts/ci_setup.sh
+  #     - attach_workspace:
+  #         at: ~/plugin
+  #     - run: sudo pip install ~/plugin/*.whl
+  #     - run: mkdir graphs
+  #     - run: python cpu_graphs.py python-cpp --runtime 10 --trials 10
+  #     - run: python memory_graphs.py python-cpp
+  #     - run: python dropped_graphs.py python-cpp
+  #     - run: python disconnect_graphs.py python-cpp
+  #
+  #     - store_artifacts:
+  #         path: logs
+  #         destination: logs
+  #     - store_artifacts:
+  #         path: graphs
+  #         destination: graphs
 
 workflows:
   version: 2
@@ -109,3 +149,4 @@ workflows:
       - test-python3.5
       - test-python3.6
       - test-python3.7
+      - regression_test
