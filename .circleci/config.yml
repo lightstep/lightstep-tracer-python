@@ -125,7 +125,6 @@ jobs:
       - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/benchmark
       - run: ~/benchmark/scripts/ci_setup.sh
       - run: sudo pip install -e ~/repo
-      - run: mkdir ~/benchmark/graphs
       - run: python ~/benchmark/cpu_graphs.py python --runtime 10 --trials 10
       - store_artifacts:
           path: ~/benchmark/graphs
@@ -144,7 +143,6 @@ jobs:
       - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/benchmark
       - run: ~/benchmark/scripts/ci_setup.sh
       - run: sudo pip install -e ~/repo
-      - run: mkdir ~/benchmark/graphs
       - run: python ~/benchmark/dropped_graphs.py python
       - run: python ~/benchmark/memory_graphs.py python
       - run: python ~/benchmark/disconnect_graphs.py python
