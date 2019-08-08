@@ -107,38 +107,53 @@ jobs:
 
     steps:
       - checkout
-      - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/tracer-benchmark
-      - run: ~/tracer-benchmark/scripts/ci_setup.sh
-      # install the LS tracer
+      - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/benchmark
+      - run: ~/benchmark/scripts/ci_setup.sh
       - run: sudo pip install -e ~/repo
-      - run: pytest --client_name python-cpp ~/tracer-benchmark/test_client.py
+      - run: pytest --client_name python ~/benchmark/test_client.py
       - store_artifacts:
           path: logs
           destination: logs
 
-  # make_graphs:
-  #   docker:
-  #     - image: circleci/python:3.7.4
-  #   working_directory: ~/repo
-  #
-  #   steps:
-  #     - run: cd ~; git clone https://github.com/isaaczinda/tracer-benchmark.git repo
-  #     - run: ./scripts/ci_setup.sh
-  #     - attach_workspace:
-  #         at: ~/plugin
-  #     - run: sudo pip install ~/plugin/*.whl
-  #     - run: mkdir graphs
-  #     - run: python cpu_graphs.py python-cpp --runtime 10 --trials 10
-  #     - run: python memory_graphs.py python-cpp
-  #     - run: python dropped_graphs.py python-cpp
-  #     - run: python disconnect_graphs.py python-cpp
-  #
-  #     - store_artifacts:
-  #         path: logs
-  #         destination: logs
-  #     - store_artifacts:
-  #         path: graphs
-  #         destination: graphs
+  make_cpu_graphs:
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/benchmark
+      - run: ~/benchmark/scripts/ci_setup.sh
+      - run: sudo pip install -e ~/repo
+      - run: mkdir ~/benchmark/graphs
+      - run: python ~/benchmark/cpu_graphs.py python --runtime 10 --trials 10
+      - store_artifacts:
+          path: ~/benchmark/graphs
+          destination: graphs
+      - store_artifacts:
+          path: ~/benchmark/logs
+          destination: logs
+
+  make_other_graphs:
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/benchmark
+      - run: ~/benchmark/scripts/ci_setup.sh
+      - run: sudo pip install -e ~/repo
+      - run: mkdir ~/benchmark/graphs
+      - run: python ~/benchmark/dropped_graphs.py python
+      - run: python ~/benchmark/memory_graphs.py python
+      - run: python ~/benchmark/disconnect_graphs.py python
+      - store_artifacts:
+          path: ~/benchmark/graphs
+          destination: graphs
+      - store_artifacts:
+          path: ~/benchmark/logs
+          destination: logs
 
 workflows:
   version: 2
@@ -150,3 +165,11 @@ workflows:
       - test-python3.6
       - test-python3.7
       - regression_test
+      - approve_make_graphs:
+          type: approval
+      - make_other_graphs:
+          requires:
+            - approve_make_graphs
+      - make_cpu_graphs:
+          requires:
+            - approve_make_graphs
