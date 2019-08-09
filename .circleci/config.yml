@@ -133,7 +133,7 @@ jobs:
           path: ~/benchmark/logs
           destination: logs
 
-  make_other_graphs:
+  make_dropped_graphs:
     docker:
       - image: circleci/python:3.7.4
     working_directory: ~/repo
@@ -144,7 +144,41 @@ jobs:
       - run: ~/benchmark/scripts/ci_setup.sh
       - run: sudo pip install -e ~/repo
       - run: python ~/benchmark/dropped_graphs.py python
+      - store_artifacts:
+          path: ~/benchmark/graphs
+          destination: graphs
+      - store_artifacts:
+          path: ~/benchmark/logs
+          destination: logs
+
+  make_memory_graphs:
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/benchmark
+      - run: ~/benchmark/scripts/ci_setup.sh
+      - run: sudo pip install -e ~/repo
       - run: python ~/benchmark/memory_graphs.py python
+      - store_artifacts:
+          path: ~/benchmark/graphs
+          destination: graphs
+      - store_artifacts:
+          path: ~/benchmark/logs
+          destination: logs
+
+  make_disconnect_graphs:
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/benchmark
+      - run: ~/benchmark/scripts/ci_setup.sh
+      - run: sudo pip install -e ~/repo
       - run: python ~/benchmark/disconnect_graphs.py python
       - store_artifacts:
           path: ~/benchmark/graphs
@@ -165,7 +199,13 @@ workflows:
       - regression_test
       - approve_make_graphs:
           type: approval
-      - make_other_graphs:
+      - make_dropped_graphs:
+          requires:
+            - approve_make_graphs
+      - make_memory_graphs:
+          requires:
+            - approve_make_graphs
+      - make_disconnect_graphs:
           requires:
             - approve_make_graphs
       - make_cpu_graphs:
