@@ -110,7 +110,7 @@ jobs:
       - run: git clone https://github.com/isaaczinda/tracer-benchmark.git ~/benchmark
       - run: ~/benchmark/scripts/ci_setup.sh
       - run: sudo pip install -e ~/repo
-      - run: pytest -s --client_name python ~/benchmark/test_client.py
+      - run: pytest -s --client_name python ~/benchmark/regression_tests.py
       - store_artifacts:
           path: logs
           destination: logs
