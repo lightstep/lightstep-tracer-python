@@ -14,4 +14,4 @@ cd lightstep-benchmarks
 MATCHING_VERSIONS=`git tag --sort -version:refname --list "v${MAJOR_VERSION}.*.*"`
 NEWEST_VERSION=`echo ${MATCHING_VERSIONS} | tr '\n' ',' | cut -d ',' -f 1`
 
-git checkout ${NEWEST_VERSION}
+git checkout -b ${NEWEST_VERSION}
