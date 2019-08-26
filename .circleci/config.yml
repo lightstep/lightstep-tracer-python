@@ -7,18 +7,18 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:2.7
+      - image: circleci/python:2.7
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test27
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test27
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
 
   test-python3.4:
     working_directory: ~/lightstep/lightstep-tracer-python
@@ -27,18 +27,18 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:3.4
+      - image: circleci/python:3.4
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test34
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test34
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
 
   test-python3.5:
     working_directory: ~/lightstep/lightstep-tracer-python
@@ -47,18 +47,18 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:3.5
+      - image: circleci/python:3.5
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test35
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test35
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
 
   test-python3.6:
     working_directory: ~/lightstep/lightstep-tracer-python
@@ -67,18 +67,18 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:3.6
+      - image: circleci/python:3.6
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test36
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test36
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
 
   test-python3.7:
     working_directory: ~/lightstep/lightstep-tracer-python
@@ -87,18 +87,107 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/python:3.7
+      - image: circleci/python:3.7
     steps:
-    - checkout
-    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: sudo pip install tox
-    - run: make test37
-    - store_test_results:
-        path: /tmp/circleci-test-results
-    - store_artifacts:
-        path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test37
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
+
+  regression_test:
+    resource_class: xlarge
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run: cd ~; ~/repo/ci/clone_lightstep_benchmarks.sh
+      - run: ~/lightstep-benchmarks/scripts/ci_setup.sh
+      - run: sudo pip install -e ~/repo
+      - run: |
+          cd ~/lightstep-benchmarks/
+          pytest -s --client_name python regression_tests.py
+      - store_artifacts:
+          path: ~/lightstep-benchmarks/logs
+          destination: logs
+
+  make_cpu_graphs:
+    resource_class: xlarge
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run: cd ~; ~/repo/ci/clone_lightstep_benchmarks.sh
+      - run: ~/lightstep-benchmarks/scripts/ci_setup.sh
+      - run: sudo pip install -e ~/repo
+      - run: python ~/lightstep-benchmarks/cpu_graphs.py python --runtime 10 --trials 20
+      - store_artifacts:
+          path: ~/lightstep-benchmarks/graphs
+          destination: graphs
+      - store_artifacts:
+          path: ~/lightstep-benchmarks/logs
+          destination: logs
+
+  make_dropped_graphs:
+    resource_class: xlarge
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run: cd ~; ~/repo/ci/clone_lightstep_benchmarks.sh
+      - run: ~/lightstep-benchmarks/scripts/ci_setup.sh
+      - run: sudo pip install -e ~/repo
+      - run: python ~/lightstep-benchmarks/dropped_graphs.py python
+      - store_artifacts:
+          path: ~/lightstep-benchmarks/graphs
+          destination: graphs
+      - store_artifacts:
+          path: ~/lightstep-benchmarks/logs
+          destination: logs
+
+  make_memory_graphs:
+    resource_class: xlarge
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run: cd ~; ~/repo/ci/clone_lightstep_benchmarks.sh
+      - run: ~/lightstep-benchmarks/scripts/ci_setup.sh
+      - run: sudo pip install -e ~/repo
+      - run: python ~/lightstep-benchmarks/memory_graphs.py python
+      - store_artifacts:
+          path: ~/lightstep-benchmarks/graphs
+          destination: graphs
+      - store_artifacts:
+          path: ~/lightstep-benchmarks/logs
+          destination: logs
+
+  make_disconnect_graphs:
+    resource_class: xlarge
+    docker:
+      - image: circleci/python:3.7.4
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run: cd ~; ~/repo/ci/clone_lightstep_benchmarks.sh
+      - run: ~/lightstep-benchmarks/scripts/ci_setup.sh
+      - run: sudo pip install -e ~/repo
+      - run: python ~/lightstep-benchmarks/disconnect_graphs.py python
+      - store_artifacts:
+          path: ~/lightstep-benchmarks/graphs
+          destination: graphs
+      - store_artifacts:
+          path: ~/lightstep-benchmarks/logs
+          destination: logs
 
 workflows:
   version: 2
@@ -109,3 +198,18 @@ workflows:
       - test-python3.5
       - test-python3.6
       - test-python3.7
+      - regression_test
+      - approve_make_graphs:
+          type: approval
+      - make_dropped_graphs:
+          requires:
+            - approve_make_graphs
+      - make_memory_graphs:
+          requires:
+            - approve_make_graphs
+      - make_disconnect_graphs:
+          requires:
+            - approve_make_graphs
+      - make_cpu_graphs:
+          requires:
+            - approve_make_graphs
