@@ -127,7 +127,7 @@ jobs:
       - run: cd ~; ~/repo/ci/clone_lightstep_benchmarks.sh
       - run: ~/lightstep-benchmarks/scripts/ci_setup.sh
       - run: sudo pip install -e ~/repo
-      - run: python ~/lightstep-benchmarks/cpu_graphs.py python --runtime 10 --trials 10
+      - run: python ~/lightstep-benchmarks/cpu_graphs.py python --runtime 10 --trials 20
       - store_artifacts:
           path: ~/lightstep-benchmarks/graphs
           destination: graphs
