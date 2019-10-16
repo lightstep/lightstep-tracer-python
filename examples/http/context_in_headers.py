@@ -29,6 +29,8 @@ except ImportError:
 import opentracing
 import opentracing.ext.tags
 import lightstep
+from opentracing import Format
+from lightstep.b3_propagator import B3Propagator
 
 
 class RemoteHandler(BaseHTTPRequestHandler):
@@ -145,6 +147,12 @@ def lightstep_tracer_from_args():
 if __name__ == '__main__':
     with lightstep_tracer_from_args() as tracer:
         opentracing.tracer = tracer
+
+        opentracing.tracer.register_propagator(Format.TEXT_MAP, B3Propagator())
+        opentracing.tracer.register_propagator(
+            Format.HTTP_HEADERS, B3Propagator()
+        )
+
         global _exit_code
         _exit_code = 0
 
