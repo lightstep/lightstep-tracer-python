@@ -5,6 +5,11 @@ LightStep specific carrier formats.
 from __future__ import absolute_import
 
 
+# The TRACE_CONTEXT format represents SpanContexts in Trace Context format.
+# https://www.w3.org/TR/trace-context/
+TRACE_CONTEXT = "trace_context"
+
+
 class LightStepFormat(object):
     """A namespace for lightstep supported carrier formats.
 
