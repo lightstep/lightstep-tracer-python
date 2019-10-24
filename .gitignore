@@ -12,3 +12,4 @@ dist/*
 .idea
 .pytest_cache/
 .python-version
+tests/trace-context/trace-context
