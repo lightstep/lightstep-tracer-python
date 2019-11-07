@@ -39,34 +39,38 @@ class B3Propagator(Propagator):
             carrier[_FLAGS] = flags
 
         sampled = baggage.pop(_SAMPLED, None)
-        if sampled is not None:
+
+        if sampled is None:
+            carrier[_SAMPLED] = 1
+        else:
             if flags == 1:
                 _LOG.warning(
                     "x-b3-flags: 1 implies x-b3-sampled: 1, not sending "
                     "the value of x-b3-sampled"
                 )
             else:
-                if sampled in [True, False]:
+                if isinstance(sampled, bool):
                     warn(
                         "The value of x-b3-sampled should "
                         "be {} instead of {}".format(
                             int(sampled), sampled
                         )
                     )
-                carrier[_SAMPLED] = int(sampled)
+                carrier[_SAMPLED] = sampled
 
         if sampled is flags is (traceid and spanid) is None:
             warn(
                 "If not propagating only the sampling state, traceid and "
-                "spanid must be defined"
+                "spanid must be defined, setting sampling state to 1."
             )
+            carrier[_SAMPLED] = 1
 
         carrier.update(baggage)
 
         if traceid is not None:
-            carrier[_TRACEID] = format(traceid, "x").ljust(32, "0")
+            carrier[_TRACEID] = format(traceid, "x")
         if spanid is not None:
-            carrier[_SPANID] = format(spanid, "016x")
+            carrier[_SPANID] = format(spanid, "x")
 
     def extract(self, carrier):
 
@@ -127,7 +131,7 @@ class B3Propagator(Propagator):
                         "the received value of x-b3-sampled"
                     )
             elif sampled is not None:
-                baggage[_SAMPLED] = int(sampled, 16)
+                baggage[_SAMPLED] = sampled
 
             baggage.update(carrier)
 
