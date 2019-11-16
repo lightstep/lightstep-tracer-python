@@ -1,4 +1,8 @@
 CHANGELOG.md
+<a name="4.3.0"></a>
+## [4.2.1](https://github.com/lightstep/lightstep-tracer-python/compare/4.2.1...4.3.0)
+* Add support for B3 headers
+
 <a name="4.2.1"></a>
 ## [4.2.0](https://github.com/lightstep/lightstep-tracer-python/compare/4.2.0...4.2.1)
 * Properly format OpenTracing error logs
