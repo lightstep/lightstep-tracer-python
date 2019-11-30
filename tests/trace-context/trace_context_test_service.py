@@ -47,10 +47,6 @@ def hello():
                 timeout=5.0,
             )
 
-            scope.span.context.trace_id = int(
-                format(scope.span.context.trace_id, "032x")[:16], 16
-            )
-
     return 'Hello, {}!'.format(hello_to)
 
 
