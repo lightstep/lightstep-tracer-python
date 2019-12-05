@@ -1,4 +1,9 @@
 CHANGELOG.md
+<a name="4.4.0"></a>
+## [4.3.0](https://github.com/lightstep/lightstep-tracer-python/compare/4.3.0...4.4.0)
+* Add support for B3 headers
+* Truncate trace_id for specific LightStep requirements
+
 <a name="4.3.0"></a>
 ## [4.2.1](https://github.com/lightstep/lightstep-tracer-python/compare/4.2.1...4.3.0)
 * Add support for B3 headers
