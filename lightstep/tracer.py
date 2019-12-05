@@ -82,47 +82,6 @@ class _LightstepTracer(BasicTracer):
             self.register_propagator(Format.BINARY, BinaryPropagator())
             self.register_propagator(LightStepFormat.LIGHTSTEP_BINARY, LightStepBinaryPropagator())
 
-    def start_active_span(
-        self,
-        operation_name,
-        child_of=None,
-        references=None,
-        tags=None,
-        start_time=None,
-        ignore_active_span=False,
-        finish_on_close=True
-    ):
-
-        scope = super(_LightstepTracer, self).start_active_span(
-            operation_name,
-            child_of=child_of,
-            references=references,
-            tags=tags,
-            start_time=start_time,
-            ignore_active_span=ignore_active_span,
-            finish_on_close=finish_on_close
-        )
-
-        class ScopePatch(scope.__class__):
-
-            def __exit__(self, exc_type, exc_val, exc_tb):
-
-                self.span.context.trace_id = int(
-                    format(self.span.context.trace_id, "032x")[:16], 16
-                )
-
-                result = super(self.__class__, self).__exit__(
-                    exc_type, exc_val, exc_tb
-                )
-
-                return result
-
-        # This monkey patching is done because LightStep requires for the
-        # trace_id to be 64b long.
-        scope.__class__ = ScopePatch
-
-        return scope
-
     def flush(self):
         """Force a flush of buffered Span data to the LightStep collector."""
         self.recorder.flush()
