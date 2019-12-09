@@ -108,7 +108,7 @@ class _LightstepTracer(BasicTracer):
             def __exit__(self, exc_type, exc_val, exc_tb):
 
                 self.span.context.trace_id = int(
-                    format(self.span.context.trace_id, "032x")[:16], 16
+                    format(self.span.context.trace_id, "032x")[16:], 16
                 )
 
                 result = super(self.__class__, self).__exit__(
