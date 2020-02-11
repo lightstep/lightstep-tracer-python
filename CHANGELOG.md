@@ -1,6 +1,6 @@
 CHANGELOG.md
 <a name="4.4.3"></a>
-## [4.4.2](https://github.com/lightstep/lightstep-tracer-python/compare/4.4.1...4.4.3)
+## [4.4.3](https://github.com/lightstep/lightstep-tracer-python/compare/4.4.1...4.4.3)
 * Update version of Thrift to 0.13.0
 
 <a name="4.4.1"></a>
