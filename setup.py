@@ -8,7 +8,7 @@ setup(
     author='LightStep',
     license='',
     install_requires=[
-        'thrift>=0.10.0,<0.12.0',
+        'thrift>=0.13.0',
         'jsonpickle',
         'six',
         'basictracer>=3.0,<4',
