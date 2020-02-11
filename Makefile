@@ -74,7 +74,7 @@ proto:
 		collector.proto
 
 thrift:
-	docker run -v "$(PWD)/lightstep:/out" -v "$(MONO_REPO)/go/src/github.com/lightstep/common-go:/data" --rm thrift:0.11.0 \
+	docker run -v "$(PWD)/lightstep:/out" -v "$(MONO_REPO)/go/src/github.com/lightstep/common-go:/data" --rm thrift:0.13.0 \
 		thrift -r --gen py -out /out /data/crouton.thrift
 	python-modernize -w $(PWD)/lightstep/crouton/
 	rm -rf lightstep/crouton/ReportingService-remote
