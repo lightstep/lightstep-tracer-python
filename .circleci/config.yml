@@ -122,9 +122,6 @@ jobs:
 
   regression_test:
     resource_class: xlarge
-    requires:
-      - test-python3.7
-      - test-python2.7
     docker:
       - image: circleci/python:3.7.4
     working_directory: ~/repo
@@ -221,7 +218,15 @@ workflows:
       - test-python3.5
       - test-python3.6
       - test-python3.7
-      - regression_test
+      - test-python3.8
+      - regression_test:
+          requires:
+            - test-python2.7
+            - test-python3.4
+            - test-python3.5
+            - test-python3.6
+            - test-python3.7
+            - test-python3.8
       - approve_make_graphs:
           type: approval
       - make_dropped_graphs:
