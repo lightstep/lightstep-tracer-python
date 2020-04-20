@@ -80,6 +80,26 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
+  test-python3.7:
+    working_directory: ~/lightstep/lightstep-tracer-python
+    shell: /bin/bash --login
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test37
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
+
   test-python3.8:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
@@ -99,26 +119,6 @@ jobs:
           path: /tmp/circleci-artifacts
       - store_artifacts:
           path: /tmp/circleci-test-results
-
-          test-python3.7:
-            working_directory: ~/lightstep/lightstep-tracer-python
-            shell: /bin/bash --login
-            environment:
-              CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
-              CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
-            docker:
-              - image: circleci/python:3.8
-            steps:
-              - checkout
-              - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-              - run: sudo pip install tox
-              - run: make test38
-              - store_test_results:
-                  path: /tmp/circleci-test-results
-              - store_artifacts:
-                  path: /tmp/circleci-artifacts
-              - store_artifacts:
-                  path: /tmp/circleci-test-results
 
   regression_test:
     resource_class: xlarge
