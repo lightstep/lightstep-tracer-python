@@ -1,6 +1,7 @@
-version: 2
+version: 2.1
+
 jobs:
-  test-python2.7:
+  test-python27:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -20,7 +21,7 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
-  test-python3.4:
+  test-python34:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -40,7 +41,7 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
-  test-python3.5:
+  test-python35:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -60,7 +61,7 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
-  test-python3.6:
+  test-python36:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -80,7 +81,7 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
-  test-python3.7:
+  test-python37:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -100,7 +101,7 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
-  test-python3.8:
+  test-python38:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -123,7 +124,7 @@ jobs:
   regression_test:
     resource_class: xlarge
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/python:3.7.7
     working_directory: ~/repo
     steps:
       - checkout
@@ -132,7 +133,10 @@ jobs:
       - run: sudo pip install -e ~/repo
       - run: |
           cd ~/lightstep-benchmarks/
-          pytest -s --client_name python regression_tests.py
+          pytest -s --client_name python regression_tests.py::test_max_throughput
+          pytest -s --client_name python regression_tests.py::test_memory
+          pytest -s --client_name python regression_tests.py::test_dropped_spans
+          pytest -s --client_name python regression_tests.py::test_cpu
       - store_artifacts:
           path: ~/lightstep-benchmarks/logs
           destination: logs
@@ -213,31 +217,36 @@ workflows:
   version: 2
   test:
     jobs:
-      - test-python2.7
-      - test-python3.4
-      - test-python3.5
-      - test-python3.6
-      - test-python3.7
-      - test-python3.8
-      - regression_test:
+      - regression_test
+      - test-python27:
           requires:
-            - test-python2.7
-            - test-python3.4
-            - test-python3.5
-            - test-python3.6
-            - test-python3.7
-            - test-python3.8
-      - approve_make_graphs:
-          type: approval
-      - make_dropped_graphs:
+            - regression_test
+      - test-python34:
           requires:
-            - approve_make_graphs
-      - make_memory_graphs:
+            - regression_test
+      - test-python35:
           requires:
-            - approve_make_graphs
-      - make_disconnect_graphs:
+            - regression_test
+      - test-python36:
           requires:
-            - approve_make_graphs
-      - make_cpu_graphs:
+            - regression_test
+      - test-python37:
           requires:
-            - approve_make_graphs
+            - regression_test
+      - test-python38:
+          requires:
+            - regression_test
+      # - approve_make_graphs:
+      #     type: approval
+      # - make_dropped_graphs:
+      #     requires:
+      #       - approve_make_graphs
+      # - make_memory_graphs:
+      #     requires:
+      #       - approve_make_graphs
+      # - make_disconnect_graphs:
+      #     requires:
+      #       - approve_make_graphs
+      # - make_cpu_graphs:
+      #     requires:
+      #       - approve_make_graphs
