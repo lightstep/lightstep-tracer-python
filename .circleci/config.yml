@@ -122,6 +122,9 @@ jobs:
 
   regression_test:
     resource_class: xlarge
+    requires:
+      - test-python3.7
+      - test-python2.7
     docker:
       - image: circleci/python:3.7.4
     working_directory: ~/repo
