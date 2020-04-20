@@ -64,6 +64,9 @@ test36: build
 test37: build
 	tox -e py37
 
+test38: build
+	tox -e py38
+
 test: build
 	tox
 
