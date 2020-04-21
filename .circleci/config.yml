@@ -254,17 +254,3 @@ workflows:
       - test-python38:
           requires:
             - regression_test
-      # - approve_make_graphs:
-      #     type: approval
-      # - make_dropped_graphs:
-      #     requires:
-      #       - approve_make_graphs
-      # - make_memory_graphs:
-      #     requires:
-      #       - approve_make_graphs
-      # - make_disconnect_graphs:
-      #     requires:
-      #       - approve_make_graphs
-      # - make_cpu_graphs:
-      #     requires:
-      #       - approve_make_graphs
