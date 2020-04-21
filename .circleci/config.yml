@@ -151,7 +151,6 @@ jobs:
       - run: sudo pip install -e ~/repo
       - run: |
           cd ~/lightstep-benchmarks/
-          pytest -s --client_name python regression_tests.py::test_max_throughput
           pytest -s --client_name python regression_tests.py::test_memory
           pytest -s --client_name python regression_tests.py::test_dropped_spans
           pytest -s --client_name python regression_tests.py::test_cpu
