@@ -1,3 +1,4 @@
+import os
 import time
 import unittest
 
@@ -51,7 +52,44 @@ def recorder(request):
         "use_thrift": request.param,
         "use_http": not request.param,
     }
-    yield lightstep.recorder.Recorder(runtime_args)
+    yield lightstep.recorder.Recorder(**runtime_args)
+
+
+def test_default_tags_set_correctly(recorder):
+    mock_connection = MockConnection()
+    mock_connection.open()
+    if hasattr(recorder._runtime, "tags"):
+        tags = recorder._runtime.tags
+    else:
+        tags = recorder._runtime.attrs
+    for tag in tags:
+        if hasattr(tag, "key"):
+            if tag.key == "lightstep.hostname":
+                assert tag.string_value == os.uname()[1]
+            if tag.key == "lightstep.tracer_platform":
+                assert tag.string_value == "python"
+        else:
+            if tag.Key == "lightstep.hostname":
+                assert tag.Value == os.uname()[1]
+            if tag.Key == "lightstep.tracer_platform":
+                assert tag.Value == "python"
+    assert len(tags) == 6
+    runtime_args = {
+        "collector_encryption": "none",
+        "collector_host": "localhost",
+        "collector_port": 9998,
+        "access_token": "{your_access_token}",
+        "component_name": "python/runtime_test",
+        "periodic_flush_seconds": 0,
+        "tags": {
+            "lightstep.hostname": "hostname",
+        },
+    }
+    new_recorder = lightstep.recorder.Recorder(**runtime_args)
+    for tag in new_recorder._runtime.tags:
+        if tag.key == "lightstep.hostname":
+            assert tag.string_value == "hostname"
+    assert len(new_recorder._runtime.tags) == 6
 
 
 # --------------
