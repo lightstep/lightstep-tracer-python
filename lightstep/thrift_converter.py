@@ -1,7 +1,9 @@
+import os
+import sys
+
 from lightstep import constants
 from lightstep.converter import Converter
 from .crouton import ttypes
-import sys
 from . import util
 from . import version as tracer_version
 import jsonpickle
@@ -29,6 +31,7 @@ class ThriftConverter(Converter):
             'lightstep.tracer_version': tracer_version.LIGHTSTEP_PYTHON_TRACER_VERSION,
             'lightstep.component_name': component_name,
             'lightstep.guid': util._id_to_hex(guid),
+            'lightstep.hostname': os.uname()[1],
         })
 
         # Convert tracer_tags to a list of KeyValue pairs.

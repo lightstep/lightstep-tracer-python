@@ -1,8 +1,10 @@
+import os
+import sys
+
 from lightstep.collector_pb2 import Auth, ReportRequest, Span, Reporter, KeyValue, Reference, SpanContext
 from lightstep.converter import Converter
 from . import util
 from . import version as tracer_version
-import sys
 from google.protobuf.timestamp_pb2 import Timestamp
 
 
@@ -29,6 +31,7 @@ class HttpConverter(Converter):
             'lightstep.tracer_version': tracer_version.LIGHTSTEP_PYTHON_TRACER_VERSION,
             'lightstep.component_name': component_name,
             'lightstep.guid': util._id_to_hex(guid),
+            'lightstep.hostname': os.uname()[1],
         })
 
         # Convert tracer_tags to a list of KeyValue pairs.
