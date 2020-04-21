@@ -149,6 +149,11 @@ jobs:
       - run: ~/lightstep-benchmarks/scripts/ci_setup.sh
       - save_benchmark_cache
       - run: sudo pip install -e ~/repo
+      # FIXME: the regression tests are current not running the test_max_throughput
+      # as it is unable to handle running in a shared CI environment and the variability
+      # from the results is sometimes greater than a 33% drop in performance
+      #
+      # pytest -s --client_name python regression_tests.py::test_max_throughput
       - run: |
           cd ~/lightstep-benchmarks/
           pytest -s --client_name python regression_tests.py::test_memory
