@@ -24,6 +24,7 @@ class ThriftConverter(Converter):
         if tags is None:
             tags = {}
         tracer_tags = tags.copy()
+        tracer_tags['lightstep.hostname'] = tracer_tags.get('lightstep.hostname', os.uname()[1])
 
         tracer_tags.update({
             'lightstep.tracer_platform': 'python',
@@ -31,7 +32,6 @@ class ThriftConverter(Converter):
             'lightstep.tracer_version': tracer_version.LIGHTSTEP_PYTHON_TRACER_VERSION,
             'lightstep.component_name': component_name,
             'lightstep.guid': util._id_to_hex(guid),
-            'lightstep.hostname': os.uname()[1],
         })
 
         # Convert tracer_tags to a list of KeyValue pairs.
