@@ -1,6 +1,23 @@
-version: 2
+version: 2.1
+
+commands:
+  restore_benchmark_cache:
+    description: "Restore pip and protos directories"
+    steps:
+      - restore_cache:
+          key: benchmark-cache-{{ checksum "~/lightstep-benchmarks/requirements-dev.txt" }}
+
+  save_benchmark_cache:
+    description: "Save pip and protos directories into cache for faster installs next time"
+    steps:
+      - save_cache:
+          key: benchmark-cache-{{ checksum "~/lightstep-benchmarks/requirements-dev.txt" }}
+          paths:
+            - "/root/.cache/pip"
+            - "~/protoc3"
+
 jobs:
-  test-python2.7:
+  test-python27:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -20,7 +37,7 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
-  test-python3.4:
+  test-python34:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -40,7 +57,7 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
-  test-python3.5:
+  test-python35:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -60,7 +77,7 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
-  test-python3.6:
+  test-python36:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -80,7 +97,7 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
-  test-python3.7:
+  test-python37:
     working_directory: ~/lightstep/lightstep-tracer-python
     shell: /bin/bash --login
     environment:
@@ -100,19 +117,48 @@ jobs:
       - store_artifacts:
           path: /tmp/circleci-test-results
 
+  test-python38:
+    working_directory: ~/lightstep/lightstep-tracer-python
+    shell: /bin/bash --login
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+      - run: sudo pip install tox
+      - run: make test38
+      - store_test_results:
+          path: /tmp/circleci-test-results
+      - store_artifacts:
+          path: /tmp/circleci-artifacts
+      - store_artifacts:
+          path: /tmp/circleci-test-results
+
   regression_test:
     resource_class: xlarge
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/python:3.7.7
     working_directory: ~/repo
     steps:
       - checkout
       - run: cd ~; ~/repo/ci/clone_lightstep_benchmarks.sh
+      - restore_benchmark_cache
       - run: ~/lightstep-benchmarks/scripts/ci_setup.sh
+      - save_benchmark_cache
       - run: sudo pip install -e ~/repo
+      # FIXME: the regression tests are current not running the test_max_throughput
+      # as it is unable to handle running in a shared CI environment and the variability
+      # from the results is sometimes greater than a 33% drop in performance
+      #
+      # pytest -s --client_name python regression_tests.py::test_max_throughput
       - run: |
           cd ~/lightstep-benchmarks/
-          pytest -s --client_name python regression_tests.py
+          pytest -s --client_name python regression_tests.py::test_memory
+          pytest -s --client_name python regression_tests.py::test_dropped_spans
+          pytest -s --client_name python regression_tests.py::test_cpu
       - store_artifacts:
           path: ~/lightstep-benchmarks/logs
           destination: logs
@@ -193,23 +239,22 @@ workflows:
   version: 2
   test:
     jobs:
-      - test-python2.7
-      - test-python3.4
-      - test-python3.5
-      - test-python3.6
-      - test-python3.7
       - regression_test
-      - approve_make_graphs:
-          type: approval
-      - make_dropped_graphs:
+      - test-python27:
           requires:
-            - approve_make_graphs
-      - make_memory_graphs:
+            - regression_test
+      - test-python34:
           requires:
-            - approve_make_graphs
-      - make_disconnect_graphs:
+            - regression_test
+      - test-python35:
           requires:
-            - approve_make_graphs
-      - make_cpu_graphs:
+            - regression_test
+      - test-python36:
           requires:
-            - approve_make_graphs
+            - regression_test
+      - test-python37:
+          requires:
+            - regression_test
+      - test-python38:
+          requires:
+            - regression_test
