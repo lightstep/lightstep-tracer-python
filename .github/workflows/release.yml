@@ -23,8 +23,8 @@ jobs:
           body: |
             Changes in this Release
             - ${{ github.ref }}
-          draft: true
-          prerelease: true
+          draft: false
+          prerelease: false
 
   deploy:
     name: Publish package
@@ -48,4 +48,4 @@ jobs:
         mkdir -p ./dist
         python setup.py sdist      # source distribution
         python setup.py bdist_wheel
-        twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+        twine upload dist/*
