@@ -23,8 +23,8 @@ jobs:
           body: |
             Changes in this Release
             - ${{ github.ref }}
-          draft: false
-          prerelease: false
+          draft: true
+          prerelease: true
 
   deploy:
     name: Publish package
