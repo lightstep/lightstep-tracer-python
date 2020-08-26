@@ -58,20 +58,17 @@ def recorder(request):
 def test_default_tags_set_correctly(recorder):
     mock_connection = MockConnection()
     mock_connection.open()
-    if hasattr(recorder._runtime, "tags"):
-        tags = recorder._runtime.tags
-    else:
-        tags = recorder._runtime.attrs
+    tags = getattr(recorder._runtime, "tags", recorder._runtime.attrs)
     for tag in tags:
         if hasattr(tag, "key"):
             if tag.key == "lightstep.hostname":
-                assert tag.string_value == os.uname()[1]
-            if tag.key == "lightstep.tracer_platform":
+                assert tag.string_value == os.uname().nodename
+            elif tag.key == "lightstep.tracer_platform":
                 assert tag.string_value == "python"
         else:
             if tag.Key == "lightstep.hostname":
-                assert tag.Value == os.uname()[1]
-            if tag.Key == "lightstep.tracer_platform":
+                assert tag.Value == os.uname().nodename
+            elif tag.Key == "lightstep.tracer_platform":
                 assert tag.Value == "python"
     assert len(tags) == 6
     runtime_args = {
@@ -118,8 +115,11 @@ def test_send_spans_after_shutdown(recorder):
 
 
 def test_shutdown_twice(recorder):
-    recorder.shutdown()
-    recorder.shutdown()
+    try:
+        recorder.shutdown()
+        recorder.shutdown()
+    except Exception as error:
+        self.fail("Unexpected exception raised: {}".format(error))
 
 
 # ------------

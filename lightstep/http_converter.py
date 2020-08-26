@@ -24,7 +24,7 @@ class HttpConverter(Converter):
         if tags is None:
             tags = {}
         tracer_tags = tags.copy()
-        tracer_tags['lightstep.hostname'] = tracer_tags.get('lightstep.hostname', os.uname()[1])
+        tracer_tags['lightstep.hostname'] = tracer_tags.get('lightstep.hostname', os.uname().nodename)
 
         tracer_tags.update({
             'lightstep.tracer_platform': 'python',
