@@ -1,4 +1,4 @@
-import os
+import socket
 import time
 import unittest
 
@@ -58,16 +58,18 @@ def recorder(request):
 def test_default_tags_set_correctly(recorder):
     mock_connection = MockConnection()
     mock_connection.open()
-    tags = getattr(recorder._runtime, "tags", recorder._runtime.attrs)
+    tags = getattr(recorder._runtime, "tags", None)
+    if tags is None:
+        tags = getattr(recorder._runtime, "attrs")
     for tag in tags:
         if hasattr(tag, "key"):
             if tag.key == "lightstep.hostname":
-                assert tag.string_value == os.uname().nodename
+                assert tag.string_value == socket.gethostname()
             elif tag.key == "lightstep.tracer_platform":
                 assert tag.string_value == "python"
         else:
             if tag.Key == "lightstep.hostname":
-                assert tag.Value == os.uname().nodename
+                assert tag.Value == socket.gethostname()
             elif tag.Key == "lightstep.tracer_platform":
                 assert tag.Value == "python"
     assert len(tags) == 6

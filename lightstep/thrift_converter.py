@@ -1,4 +1,4 @@
-import os
+import socket
 import sys
 
 from lightstep import constants
@@ -24,7 +24,7 @@ class ThriftConverter(Converter):
         if tags is None:
             tags = {}
         tracer_tags = tags.copy()
-        tracer_tags['lightstep.hostname'] = tracer_tags.get('lightstep.hostname', os.uname().nodename)
+        tracer_tags['lightstep.hostname'] = tracer_tags.get('lightstep.hostname', socket.gethostname())
 
         tracer_tags.update({
             'lightstep.tracer_platform': 'python',
