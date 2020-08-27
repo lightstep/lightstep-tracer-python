@@ -1,8 +1,10 @@
+import socket
+import sys
+
 from lightstep.collector_pb2 import Auth, ReportRequest, Span, Reporter, KeyValue, Reference, SpanContext
 from lightstep.converter import Converter
 from . import util
 from . import version as tracer_version
-import sys
 from google.protobuf.timestamp_pb2 import Timestamp
 
 
@@ -22,6 +24,7 @@ class HttpConverter(Converter):
         if tags is None:
             tags = {}
         tracer_tags = tags.copy()
+        tracer_tags['lightstep.hostname'] = tracer_tags.get('lightstep.hostname', socket.gethostname())
 
         tracer_tags.update({
             'lightstep.tracer_platform': 'python',
