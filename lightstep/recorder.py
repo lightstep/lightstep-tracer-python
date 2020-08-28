@@ -14,7 +14,7 @@ import traceback
 import warnings
 
 from basictracer.recorder import SpanRecorder
-from opentracing.logs import ERROR_KIND, STACK, ERROR_OBJECT
+from opentracing.logs import ERROR_KIND, STACK
 
 from lightstep.http_converter import HttpConverter
 from lightstep.thrift_converter import ThriftConverter
@@ -171,11 +171,7 @@ class Recorder(SpanRecorder):
                 log.key_values[ERROR_KIND] = util._format_exc_type(log.key_values[ERROR_KIND])
 
             if STACK in log.key_values:
-                log.key_values[STACK] = util._format_exc_tb(
-                    log.key_values.get(ERROR_OBJECT),
-                    log.key_values.get(ERROR_KIND),
-                    log.key_values[STACK]
-                )
+                log.key_values[STACK] = util._format_exc_tb(log.key_values[STACK])
 
         return log
 
