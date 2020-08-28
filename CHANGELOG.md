@@ -1,4 +1,9 @@
 CHANGELOG.md
+
+<a name="4.4.5"></a>
+## [4.4.5](https://github.com/lightstep/lightstep-tracer-python/compare/4.4.4...4.4.5)
+* Revert: Format tracebacks with cause
+
 <a name="4.4.4"></a>
 ## [4.4.4](https://github.com/lightstep/lightstep-tracer-python/compare/4.4.3...4.4.4)
 * Format tracebacks with cause
