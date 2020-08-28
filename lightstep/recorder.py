@@ -172,8 +172,8 @@ class Recorder(SpanRecorder):
 
             if STACK in log.key_values:
                 log.key_values[STACK] = util._format_exc_tb(
-                    log.key_values.get(ERROR_OBJECT),
                     log.key_values.get(ERROR_KIND),
+                    log.key_values.get(ERROR_OBJECT),
                     log.key_values[STACK]
                 )
 

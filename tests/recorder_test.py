@@ -225,22 +225,30 @@ def test_exception_formatting(recorder):
     assert len(recorder._span_records) == 1
     assert recorder.flush(mock_connection)
     spans = recorder.converter.get_span_records(mock_connection.reports[1])
+    
     if hasattr(spans[0], "log_records"):
         assert len(spans[0].log_records) == 1
         assert len(spans[0].log_records[0].fields) == 3
-        assert spans[0].log_records[0].fields[0].Key == "stack"
-        assert spans[0].log_records[0].fields[1] == ttypes.KeyValue(
-            Key="error.kind", Value="Exception"
-        )
-        assert spans[0].log_records[0].fields[2] == ttypes.KeyValue(
-            Key="error.object", Value=""
-        )
+        for field in spans[0].log_records[0].fields:
+            if field.Key == "stack":
+                assert "Traceback (most recent call last):" in field.Value
+            elif field.Key == "error.kind":
+                assert field.Value == "Exception"
+            elif field.Key == "error.object":
+                assert field.Value == ""
+            else:
+                raise AttributeError("unexpected field: %s".format(field.Key))
     else:
         assert len(spans[0].logs) == 1
         assert len(spans[0].logs[0].fields) == 3
-        assert spans[0].logs[0].fields[0].key == "stack"
-        assert spans[0].logs[0].fields[1].key == "error.kind"
-        assert spans[0].logs[0].fields[1].string_value == "Exception"
-        assert spans[0].logs[0].fields[2].key == "error.object"
-        assert spans[0].logs[0].fields[2].string_value == ""
+
+        for field in spans[0].logs[0].fields:
+            if field.key == "stack":
+                assert "Traceback (most recent call last):" in field.string_value
+            elif field.key == "error.kind":
+                assert field.string_value == "Exception"
+            elif field.key == "error.object":
+                assert field.string_value == ""
+            else:
+                raise AttributeError("unexpected field: %s".format(field.key))
 
