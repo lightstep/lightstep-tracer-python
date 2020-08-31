@@ -105,9 +105,9 @@ def _coerce_to_unicode(val):
             return '(encoding error)'
 
 
-def _format_exc_tb(exc_tb):
+def _format_exc_tb(exc_type, exc_value, exc_tb):
     if type(exc_tb) is types.TracebackType:
-        return ''.join(traceback.format_tb(exc_tb))
+        return ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
 
     return exc_tb
 

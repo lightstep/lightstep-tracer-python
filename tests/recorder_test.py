@@ -1,13 +1,13 @@
 import socket
+import sys
 import time
-import unittest
 
 import lightstep.constants
 import lightstep.recorder
 import lightstep.tracer
-import lightstep.recorder
 from basictracer.span import BasicSpan
 from basictracer.context import SpanContext
+from opentracing.logs import ERROR_KIND, STACK, ERROR_OBJECT
 import pytest
 
 from lightstep.crouton import ttypes
@@ -80,9 +80,7 @@ def test_default_tags_set_correctly(recorder):
         "access_token": "{your_access_token}",
         "component_name": "python/runtime_test",
         "periodic_flush_seconds": 0,
-        "tags": {
-            "lightstep.hostname": "hostname",
-        },
+        "tags": {"lightstep.hostname": "hostname",},
     }
     new_recorder = lightstep.recorder.Recorder(**runtime_args)
     for tag in new_recorder._runtime.tags:
@@ -179,3 +177,78 @@ def dummy_basic_span(recorder, i):
     )
     span.finish()
     return span
+
+
+def test_exception_formatting(recorder):
+    mock_connection = MockConnection()
+    mock_connection.open()
+
+    assert len(recorder._span_records) == 0
+
+    span = BasicSpan(
+        lightstep.tracer._LightstepTracer(False, recorder, None),
+        operation_name="exception span",
+        context=SpanContext(trace_id=1000, span_id=2000),
+        start_time=time.time() - 100,
+    )
+    span.log_kv({ERROR_KIND: AttributeError})
+    span.finish()
+    assert len(recorder._span_records) == 1
+    assert recorder.flush(mock_connection)
+    spans = recorder.converter.get_span_records(mock_connection.reports[0])
+    if hasattr(spans[0], "log_records"):
+        assert len(spans[0].log_records) == 1
+        assert len(spans[0].log_records[0].fields) == 1
+        assert spans[0].log_records[0].fields[0] == ttypes.KeyValue(
+            Key="error.kind", Value="AttributeError"
+        )
+    else:
+        assert len(spans[0].logs) == 1
+        assert len(spans[0].logs[0].fields) == 1
+        assert spans[0].logs[0].fields[0].key == "error.kind"
+        assert spans[0].logs[0].fields[0].string_value == "AttributeError"
+
+    span = BasicSpan(
+        lightstep.tracer._LightstepTracer(False, recorder, None),
+        operation_name="exception span",
+        context=SpanContext(trace_id=1000, span_id=2000),
+        start_time=time.time() - 100,
+    )
+
+    try:
+        raise Exception
+    except Exception:  # pylint: disable=broad-except
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        span.log_kv({STACK: exc_tb, ERROR_KIND: exc_type, ERROR_OBJECT: exc_value})
+
+    span.finish()
+    assert len(recorder._span_records) == 1
+    assert recorder.flush(mock_connection)
+    spans = recorder.converter.get_span_records(mock_connection.reports[1])
+    
+    if hasattr(spans[0], "log_records"):
+        assert len(spans[0].log_records) == 1
+        assert len(spans[0].log_records[0].fields) == 3
+        for field in spans[0].log_records[0].fields:
+            if field.Key == "stack":
+                assert "Traceback (most recent call last):" in field.Value
+            elif field.Key == "error.kind":
+                assert field.Value == "Exception"
+            elif field.Key == "error.object":
+                assert field.Value == ""
+            else:
+                raise AttributeError("unexpected field: %s".format(field.Key))
+    else:
+        assert len(spans[0].logs) == 1
+        assert len(spans[0].logs[0].fields) == 3
+
+        for field in spans[0].logs[0].fields:
+            if field.key == "stack":
+                assert "Traceback (most recent call last):" in field.string_value
+            elif field.key == "error.kind":
+                assert field.string_value == "Exception"
+            elif field.key == "error.object":
+                assert field.string_value == ""
+            else:
+                raise AttributeError("unexpected field: %s".format(field.key))
+
