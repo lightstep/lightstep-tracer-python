@@ -36,12 +36,12 @@ class B3Propagator(Propagator):
 
         flags = baggage.pop(_FLAGS, None)
         if flags is not None:
-            carrier[_FLAGS] = flags
+            carrier[_FLAGS] = str(flags)
 
         sampled = baggage.pop(_SAMPLED, None)
 
         if sampled is None:
-            carrier[_SAMPLED] = 1
+            carrier[_SAMPLED] = "1"
         else:
             if flags == 1:
                 _LOG.warning(
@@ -56,16 +56,17 @@ class B3Propagator(Propagator):
                             int(sampled), sampled
                         )
                     )
-                carrier[_SAMPLED] = sampled
+                carrier[_SAMPLED] = str(sampled)
 
         if sampled is flags is (traceid and spanid) is None:
             warn(
                 "If not propagating only the sampling state, traceid and "
                 "spanid must be defined, setting sampling state to 1."
             )
-            carrier[_SAMPLED] = 1
+            carrier[_SAMPLED] = "1"
 
-        carrier.update(baggage)
+        for key, value in baggage.items():
+            carrier[key] = str(value)
 
         if traceid is not None:
             carrier[_TRACEID] = format(traceid, "x")

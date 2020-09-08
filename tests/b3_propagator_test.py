@@ -32,7 +32,7 @@ class B3PropagatorTest(TestCase):
             {
                 "x-b3-traceid": format(span.context.trace_id, "x"),
                 "x-b3-spanid": format(span.context.span_id, "x"),
-                "x-b3-sampled": 1,
+                "x-b3-sampled": "1",
                 "checked": "baggage"
             }
         )
@@ -47,7 +47,7 @@ class B3PropagatorTest(TestCase):
             {
                 "x-b3-traceid": format(span.context.trace_id, "x"),
                 "x-b3-spanid": format(span.context.span_id, "x"),
-                "x-b3-flags": 1,
+                "x-b3-flags": "1",
             }
         )
 
@@ -174,9 +174,7 @@ class B3PropagatorTest(TestCase):
             carrier = {}
             tracer.inject(inject_span.context, Format.HTTP_HEADERS, carrier)
 
-            self.assertTrue(
-                isinstance(carrier["x-b3-sampled"], type(sampled_value))
-            )
+            self.assertTrue(isinstance(carrier["x-b3-sampled"], str))
 
             extract_span_context = tracer.extract(Format.HTTP_HEADERS, carrier)
 
@@ -200,7 +198,7 @@ class B3PropagatorTest(TestCase):
 
         tracer.inject(inject_span.context, Format.HTTP_HEADERS, carrier)
 
-        self.assertEqual(carrier["x-b3-sampled"], 1)
+        self.assertEqual(carrier["x-b3-sampled"], "1")
 
         extract_span_context = tracer.extract(Format.HTTP_HEADERS, carrier)
 
