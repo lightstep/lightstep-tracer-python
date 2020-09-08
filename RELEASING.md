@@ -2,7 +2,7 @@
 
 Once all the changes for a release have been merged to master, ensure the following:
 
-- [ ] version has been updated in `VERSION`, `lightstep/version.py` and `setup.cfg` 
+- [ ] version has been updated in `VERSION`, `lightstep/version.py` and `setup.py` 
 - [ ] tests are passing
 - [ ] user facing documentation has been updated
 
