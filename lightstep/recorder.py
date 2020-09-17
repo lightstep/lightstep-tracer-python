@@ -71,10 +71,11 @@ class Recorder(SpanRecorder):
         self._finest("Initialized with Tracer runtime: {0}", (self._runtime,))
         secure = collector_encryption != 'none'  # the default is 'tls'
         self._collector_url = util._collector_url_from_hostport(
-                secure,
-                collector_host,
-                collector_port,
-                self.use_thrift)
+            secure,
+            collector_host,
+            collector_port,
+            self.use_thrift
+        )
         self._timeout_seconds = timeout_seconds
         self._auth = self.converter.create_auth(access_token)
         self._mutex = threading.Lock()
@@ -82,7 +83,7 @@ class Recorder(SpanRecorder):
         self._max_span_records = max_span_records
 
         self._disabled_runtime = False
-        
+
         atexit.register(self.shutdown)
 
         self._periodic_flush_seconds = periodic_flush_seconds
@@ -99,7 +100,7 @@ class Recorder(SpanRecorder):
     def _maybe_init_flush_thread(self):
         """Start a periodic flush mechanism for this recorder if:
 
-        1. periodic_flush_seconds > 0, and 
+        1. periodic_flush_seconds > 0, and
         2. self._flush_thread is None, indicating that we have not yet
            initialized the background flush thread.
 
@@ -132,7 +133,7 @@ class Recorder(SpanRecorder):
 
         Will drop a previously-added span if the limit has been reached.
         """
-        if self._disabled_runtime:
+        if self._disabled_runtime or not span.context.sampled:
             return
 
         # Lazy-init the flush loop (if need be).
@@ -241,7 +242,7 @@ class Recorder(SpanRecorder):
     def _flush_worker(self, connection):
         """Use the given connection to transmit the current logs and spans as a
         report request."""
-        if connection == None:
+        if connection is None:
             return False
 
         # If the connection is not ready, try reestablishing it. If that
@@ -268,8 +269,9 @@ class Recorder(SpanRecorder):
 
         except Exception as e:
             self._fine(
-                    "Caught exception during report: {0}, stack trace: {1}",
-                    (e, traceback.format_exc()))
+                "Caught exception during report: {0}, stack trace: {1}",
+                (e, traceback.format_exc())
+            )
             self._restore_spans(report_request)
             return False
 
