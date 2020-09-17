@@ -1,5 +1,9 @@
 CHANGELOG.md
 
+<a name="4.4.8"></a>
+## [4.4.8](https://github.com/lightstep/lightstep-tracer-python/compare/4.4.7...4.4.8)
+* Do not record non-sampled spans (#108)
+
 <a name="4.4.7"></a>
 ## [4.4.7](https://github.com/lightstep/lightstep-tracer-python/compare/4.4.6...4.4.7)
 * Cast all carrier values to string (#106)
