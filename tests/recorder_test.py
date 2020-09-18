@@ -55,6 +55,39 @@ def recorder(request):
     yield lightstep.recorder.Recorder(**runtime_args)
 
 
+def test_non_sampled_span_thrift(recorder):
+
+    mock_connection = MockConnection()
+    mock_connection.open()
+
+    non_sampled_span = BasicSpan(
+        lightstep.tracer._LightstepTracer(False, recorder, None),
+        operation_name="non_sampled",
+        context=SpanContext(trace_id=1, span_id=1, sampled=False),
+        start_time=time.time(),
+    )
+    non_sampled_span.finish()
+
+    sampled_span = BasicSpan(
+        lightstep.tracer._LightstepTracer(False, recorder, None),
+        operation_name="sampled",
+        context=SpanContext(trace_id=1, span_id=2, sampled=True),
+        start_time=time.time(),
+    )
+    sampled_span.finish()
+    recorder.record_span(non_sampled_span)
+    recorder.record_span(sampled_span)
+
+    recorder.flush(mock_connection)
+
+    if recorder.use_thrift:
+        for span_record in mock_connection.reports[0].span_records:
+            assert span_record.span_name == "sampled"
+    else:
+        for span in mock_connection.reports[0].spans:
+            assert span.operation_name == "sampled"
+
+
 def test_default_tags_set_correctly(recorder):
     mock_connection = MockConnection()
     mock_connection.open()
@@ -80,7 +113,7 @@ def test_default_tags_set_correctly(recorder):
         "access_token": "{your_access_token}",
         "component_name": "python/runtime_test",
         "periodic_flush_seconds": 0,
-        "tags": {"lightstep.hostname": "hostname",},
+        "tags": {"lightstep.hostname": "hostname"},
     }
     new_recorder = lightstep.recorder.Recorder(**runtime_args)
     for tag in new_recorder._runtime.tags:
@@ -119,7 +152,7 @@ def test_shutdown_twice(recorder):
         recorder.shutdown()
         recorder.shutdown()
     except Exception as error:
-        self.fail("Unexpected exception raised: {}".format(error))
+        pytest.fail("Unexpected exception raised: {}".format(error))
 
 
 # ------------
@@ -225,7 +258,7 @@ def test_exception_formatting(recorder):
     assert len(recorder._span_records) == 1
     assert recorder.flush(mock_connection)
     spans = recorder.converter.get_span_records(mock_connection.reports[1])
-    
+
     if hasattr(spans[0], "log_records"):
         assert len(spans[0].log_records) == 1
         assert len(spans[0].log_records[0].fields) == 3
@@ -251,4 +284,3 @@ def test_exception_formatting(recorder):
                 assert field.string_value == ""
             else:
                 raise AttributeError("unexpected field: %s".format(field.key))
-
